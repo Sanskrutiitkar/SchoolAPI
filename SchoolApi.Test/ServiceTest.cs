@@ -27,9 +27,9 @@ namespace SchoolApi.Test
             // Arrange
             var student = new Student
             {
-                FirstName = "John",
-                LastName = "Doe",
-                StudentEmail = "john.doe@example.com",
+                FirstName = "Sanskruti",
+                LastName = "Itkar",
+                StudentEmail = "sanskruti.itkar@example.com",
                 StudentPhone = "1234567890",
                 BirthDate = new DateTime(2000, 1, 1),
                 StudentAge = 24,
@@ -84,7 +84,7 @@ namespace SchoolApi.Test
         public async Task GetSearchedStudents_ShouldCallRepoGetSearchedStudents()
         {
             // Arrange
-            string searchTerm = "John";
+            string searchTerm = "sanskruti";
             int pageNumber = 1;
             int pageSize = 10;
             var pagedResponse = new PagedResponse<Student>(new List<Student>(), pageNumber, pageSize, 0);

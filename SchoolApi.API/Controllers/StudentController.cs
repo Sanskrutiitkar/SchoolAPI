@@ -31,7 +31,7 @@ namespace SchoolApi.API.Controllers
             {
                 var students = await _studentService.GetAllStudents();
                 var dtoResponse = _mapper.Map<IEnumerable<StudentRequestDto>>(students);
-                return Ok(dtoResponse); //returns empty list if not present
+                return Ok(dtoResponse); 
             }
             catch (Exception ex)
             {

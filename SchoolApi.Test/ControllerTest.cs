@@ -88,29 +88,28 @@ namespace SchoolApi.Test
             Assert.Equal(500, internalServerErrorResult.StatusCode);
         }
 
-        //[Fact]
-        //public async Task StudentsSearch_ShouldReturnOkResult_WithFilteredStudents()
-        //{
-        //    // Arrange
-        //    var pagedResponse = new PagedResponse<Student>
-        //    {
-        //        Data = new List<Student> { new Student { FirstName = "Bruce" } },
-        //        PageNumber = 1,
-        //        PageSize = 10,
-        //        TotalRecords = 1
-        //    };
-        //    _studentServiceMock.Setup(s => s.GetSearchedStudents("Bruce", 1, 10)).ReturnsAsync(pagedResponse);
-        //    _mapperMock.Setup(m => m.Map<StudentRequestDto>(It.IsAny<Student>()))
-        //        .Returns(new StudentRequestDto { FirstName = "Bruce" });
+        [Fact]
+        public async Task StudentsSearch_ShouldReturnOkResult_WithFilteredStudents()
+        {
+            // Arrange
+            var pagedResponse = new PagedResponse<Student>(
+                new List<Student> { new Student { StudentId = 1, FirstName = "Abhishek", LastName = "Nyamati", StudentEmail = "abhishek@gmail.com", StudentGender = (Gender)1, StudentPhone = "1234567890", BirthDate = new DateTime(2000, 1, 1), StudentAge = 22, IsActive = true } },
+                pageNumber: 1,
+                pageSize: 5,
+                totalRecords: 1
+            );
+            _studentServiceMock.Setup(s => s.GetSearchedStudents("Bruce", 1, 10)).ReturnsAsync(pagedResponse);
+            _mapperMock.Setup(m => m.Map<StudentRequestDto>(It.IsAny<Student>()))
+                .Returns(new StudentRequestDto { FirstName = "Bruce" });
 
-        //    // Act
-        //    var result = await _controller.StudentsSearch("Bruce", 1, 10);
+            // Act
+            var result = await _controller.StudentsSearch("Bruce", 1, 10);
 
-        //    // Assert
-        //    var okResult = Assert.IsType<OkObjectResult>(result);
-        //    var response = Assert.IsAssignableFrom<PagedResponse<StudentRequestDto>>(okResult.Value);
-        //    Assert.Single(response.Data);
-        //}
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsAssignableFrom<PagedResponse<StudentRequestDto>>(okResult.Value);
+            Assert.Single(response.Data);
+        }
 
         [Fact]
         public async Task Post_ShouldReturnOk_WhenStudentIsCreated()
@@ -175,7 +174,7 @@ namespace SchoolApi.Test
             var studentDto = new StudentPostDto { FirstName = "Sandeep", LastName = "joshi", BirthDate = DateTime.Now.AddYears(-20), StudentGender=(Gender)1 };
             var mappedStudent = new Student { FirstName = "Sandeep", LastName = "joshi", StudentAge = 20 , StudentGender = (Gender)1 };
 
-            _studentServiceMock.Setup(s => s.UpdateStudent(1, It.IsAny<Student>())).ThrowsAsync(new StudentNotFoundException("Student not found"));
+            _studentServiceMock.Setup(s => s.UpdateStudent(1, It.IsAny<Student>())).ThrowsAsync(new StudentNotFoundException("Student with this ID does not exist"));
             _mapperMock.Setup(m => m.Map<Student>(It.IsAny<StudentPostDto>())).Returns(mappedStudent);
             // Act
             var result = await _controller.Put(1, studentDto);
@@ -184,7 +183,7 @@ namespace SchoolApi.Test
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
            
 
-            Assert.Equal("Student not found", notFoundResult.Value);
+            Assert.Equal("Student with this ID does not exist", notFoundResult.Value);
         }
 
 

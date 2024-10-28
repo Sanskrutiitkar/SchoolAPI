@@ -7,20 +7,29 @@ using SchoolApi.Business.Repository;
 namespace SchoolApi.Test
 {
     
-    public class RepoTest
+    public class RepoTest: IAsyncLifetime
     {
-        private readonly DbContextOptions<StudentDbContext> _options;
+        private  DbContextOptions<StudentDbContext> _options;
 
-        public RepoTest()
+        public async Task InitializeAsync()
         {
             _options = new DbContextOptionsBuilder<StudentDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) 
+                .UseInMemoryDatabase(databaseName: "StudentDB") 
                 .Options;
+            
         }
 
         private StudentDbContext CreateContext()
         {
-            return new StudentDbContext(_options);
+         
+            return  new StudentDbContext(_options);
+        }
+
+        public async Task DisposeAsync()
+        {
+            var _context = CreateContext();
+            await _context.Database.EnsureDeletedAsync();
+            await _context.DisposeAsync();
         }
 
         [Fact]
