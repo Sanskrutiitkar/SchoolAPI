@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace SchoolApi.API.Migrations
+namespace SchoolApi.Business.Migrations
 {
     /// <inheritdoc />
-    public partial class migrate : Migration
+    public partial class migrate1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

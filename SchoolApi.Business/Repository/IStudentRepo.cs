@@ -6,6 +6,7 @@ namespace SchoolApi.Business.Repository
 {
     public interface IStudentRepo
     {
+        Task<Student> GetStudentById(int id);
         Task<Student> AddStudent(Student student);
         Task DeleteStudent(int studentID);
         Task<IEnumerable<Student>> GetAllStudents();

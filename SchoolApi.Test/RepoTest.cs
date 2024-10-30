@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SchoolApi.Business.Data;
-using SchoolApi.Business.Exceptions;
 using SchoolApi.Business.Models;
 using SchoolApi.Business.Repository;
 

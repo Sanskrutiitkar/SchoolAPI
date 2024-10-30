@@ -8,7 +8,7 @@ using SchoolApi.Business.Data;
 
 #nullable disable
 
-namespace SchoolApi.API.Migrations
+namespace SchoolApi.Business.Migrations
 {
     [DbContext(typeof(StudentDbContext))]
     partial class StudentDbContextModelSnapshot : ModelSnapshot

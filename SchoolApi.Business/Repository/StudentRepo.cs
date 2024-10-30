@@ -1,7 +1,6 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using SchoolApi.Business.Data;
-using SchoolApi.Business.Exceptions;
 using SchoolApi.Business.Models;
 
 
@@ -15,13 +14,8 @@ namespace SchoolApi.Business.Repository
         {
             _context = context;
         }
-
         public async Task<Student> AddStudent(Student student)
         {
-            if (student == null) 
-            {
-                return null;
-            }
             await _context.Students.AddAsync(student);
             await _context.SaveChangesAsync();
             return student;
@@ -29,18 +23,11 @@ namespace SchoolApi.Business.Repository
 
         public async Task DeleteStudent(int studentID)
         {
-            var student = await _context.Students.FindAsync(studentID);
-            if (student == null)
-            {
-                throw new StudentNotFoundException("Student with this ID not found");
-            }
-
-            if (!student.IsActive)
-            {
-                throw new InvalidOperationException("Student is already inactive.");
-            }
-            student.IsActive = false;
+            var student = await _context.Students.FindAsync(studentID);         
+            student.IsActive = false; 
             await _context.SaveChangesAsync();
+            
+          
         }
 
         public async Task<IEnumerable<Student>> GetAllStudents()
@@ -48,22 +35,15 @@ namespace SchoolApi.Business.Repository
             return await _context.Students.ToListAsync() ?? new List<Student>();
         }
 
-        public async Task UpdateStudent(int id, Student student)
+        public async Task<Student> GetStudentById(int id)
         {
+            return await _context.Students.FindAsync(id); 
+        }
+
+        public async Task UpdateStudent(int id, Student student)
+        {          
             var requiredStudent = await _context.Students.FindAsync(id);
-            if (requiredStudent == null)
-            {
-                throw new StudentNotFoundException("Student with this ID does not exist");
-            }
-
-            requiredStudent.FirstName = student.FirstName;
-            requiredStudent.LastName = student.LastName;
-            requiredStudent.StudentPhone = student.StudentPhone;
-            requiredStudent.StudentEmail = student.StudentEmail;
-            requiredStudent.BirthDate = student.BirthDate;
-            requiredStudent.StudentGender = student.StudentGender;
-
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();                   
         }
 
         public async Task<PagedResponse<Student>> GetSearchedStudents(string search, int pageNumber, int pageSize)
@@ -72,7 +52,10 @@ namespace SchoolApi.Business.Repository
 
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(p => p.FirstName.Contains(search) || p.LastName.Contains(search) || p.StudentEmail.Contains(search) || p.StudentAge.ToString() == search);
+                query = query.Where(p => p.FirstName.Contains(search) ||
+                                         p.LastName.Contains(search) ||
+                                         p.StudentEmail.Contains(search) ||
+                                         p.StudentAge.ToString() == search);
             }
 
             var totalCount = await query.CountAsync();

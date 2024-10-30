@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolApi.API", "SchoolApi.API\SchoolApi.API.csproj", "{0E1C3814-5B66-46E2-9E23-57129E032229}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SchoolApi.API", "SchoolApi.API\SchoolApi.API.csproj", "{0E1C3814-5B66-46E2-9E23-57129E032229}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolApi.Business", "SchoolApi.Business\SchoolApi.Business.csproj", "{040E99AB-4A51-467F-BE82-AD9D90BAFE8D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SchoolApi.Business", "SchoolApi.Business\SchoolApi.Business.csproj", "{040E99AB-4A51-467F-BE82-AD9D90BAFE8D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolApi.Test", "SchoolApi.Test\SchoolApi.Test.csproj", "{DF19CB34-70E6-4900-96A3-00D52F14723C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SchoolApi.Test", "SchoolApi.Test\SchoolApi.Test.csproj", "{DF19CB34-70E6-4900-96A3-00D52F14723C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

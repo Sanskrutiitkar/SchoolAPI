@@ -9,11 +9,11 @@ using SchoolApi.Business.Data;
 
 #nullable disable
 
-namespace SchoolApi.API.Migrations
+namespace SchoolApi.Business.Migrations
 {
     [DbContext(typeof(StudentDbContext))]
-    [Migration("20241025071401_migrate")]
-    partial class migrate
+    [Migration("20241028123944_migrate1")]
+    partial class migrate1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
