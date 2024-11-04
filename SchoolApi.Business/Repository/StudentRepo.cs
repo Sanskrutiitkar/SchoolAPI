@@ -40,9 +40,9 @@ namespace SchoolApi.Business.Repository
             return await _context.Students.FindAsync(id); 
         }
 
-        public async Task UpdateStudent(int id, Student student)
+        public async Task UpdateStudent(Student student)
         {          
-            var requiredStudent = await _context.Students.FindAsync(id);
+           
             await _context.SaveChangesAsync();                   
         }
 

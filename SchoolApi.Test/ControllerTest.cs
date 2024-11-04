@@ -1,56 +1,131 @@
 using AutoMapper;
+using Bogus;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using SchoolApi.APi.Exceptions;
 using SchoolApi.API.Controllers;
 using SchoolApi.API.DTOs;
+using SchoolApi.API.Exceptions;
+using SchoolApi.API.Mapper;
 using SchoolApi.API.Validators;
-using SchoolApi.Business.Exceptions;
 using SchoolApi.Business.Models;
+using SchoolApi.Business.Repository;
 using SchoolApi.Business.Services;
+using System;
 using System.Dynamic;
 
 namespace SchoolApi.Test
 {
     public class ControllerTest
     {
-       
-        private readonly Mock<IStudentService> _studentServiceMock;
-        private readonly Mock<IMapper> _mapperMock;
+
+        private readonly Mock<IStudentService> _mockStudentService;
+        private readonly Mock<IStudentRepo> _mockStudentRepo;
+        private readonly IMapper _mapper; 
         private readonly StudentController _controller;
 
         public ControllerTest()
         {
-            _studentServiceMock = new Mock<IStudentService>();
-            _mapperMock = new Mock<IMapper>();
-            _controller = new StudentController(_studentServiceMock.Object, _mapperMock.Object);
+            var mappingConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new StudentAutoMapperProfile()); // Add your mapping profile here
+            });
+
+            _mapper = mappingConfig.CreateMapper();
+           // _mapper = _mapper;
+            _mockStudentService = new Mock<IStudentService>();
+            _mockStudentRepo = new Mock<IStudentRepo>();
+            _controller = new StudentController(_mockStudentService.Object, _mapper, _mockStudentRepo.Object);
         }
 
         [Fact]
-        public async Task Get_ShouldReturnOkResult_WithStudents()
+        public async Task Get_ReturnsOkResult_WithListOfStudents()
         {
             // Arrange
-            var students = new List<Student>
-        {
-            new Student { StudentId = 1, FirstName = "Sanskruti", LastName = "Itkar" }
-        };
-            _studentServiceMock.Setup(s => s.GetAllStudents()).ReturnsAsync(students);
-            _mapperMock.Setup(m => m.Map<IEnumerable<StudentRequestDto>>(It.IsAny<IEnumerable<Student>>()))
-                .Returns(new List<StudentRequestDto> { new StudentRequestDto { FirstName = "Sanskruti", LastName = "Itkar" } });
+            var students = new List<Student> { new Student { StudentId = 1, FirstName = "John" } };
+            _mockStudentRepo.Setup(repo => repo.GetAllStudents()).ReturnsAsync(students);
 
             // Act
             var result = await _controller.Get();
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<StudentRequestDto>>(okResult.Value);
+            var returnValue = Assert.IsType<List<StudentRequestDto>>(okResult.Value);
             Assert.Single(returnValue);
         }
-     
+
         [Fact]
-        public async Task Delete_ShouldReturnOk_WhenStudentIsDeleted()
+        public async Task GetStudentById_ReturnsOkResult_WhenStudentExists()
         {
             // Arrange
-            _studentServiceMock.Setup(s => s.DeleteStudent(1)).Returns(Task.CompletedTask);
+            var student = new Student { StudentId = 1, FirstName = "John" };
+            _mockStudentRepo.Setup(repo => repo.GetStudentById(1)).ReturnsAsync(student);
+
+            // Act
+            var result = await _controller.GetStudentById(1);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<StudentRequestDto>(okResult.Value);
+        }
+
+        [Fact]
+        public async Task GetStudentById_ReturnsNotFound_WhenStudentDoesNotExist()
+        {
+            // Arrange
+            _mockStudentRepo.Setup(repo => repo.GetStudentById(It.IsAny<int>())).ReturnsAsync((Student)null);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() => _controller.GetStudentById(1));
+        }
+        [Fact]
+        public async Task Post_ReturnsOkResult_WhenValidDataProvided()
+        {
+            // Arrange
+            var studentDto = new StudentPostDto { FirstName = "Jane", BirthDate = DateTime.Now.AddYears(-20) };
+
+            // Act
+            var result = await _controller.Post(studentDto);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(studentDto, okResult.Value);
+        }    
+
+        [Fact]
+        public async Task Put_ReturnsOkResult_WhenUpdatingExistingStudent()
+        {
+            // Arrange
+            var existingStudent = new Student { StudentId = 1, FirstName = "John" };
+            var updateDto = new UpdateStudentDto { FirstName = "Johnny" };
+
+            _mockStudentRepo.Setup(repo => repo.GetStudentById(1)).ReturnsAsync(existingStudent);
+
+            // Act
+            var result = await _controller.Put(1, updateDto);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var updatedStudent = Assert.IsType<Student>(okResult.Value);
+            Assert.Equal("Johnny", updatedStudent.FirstName);
+        }
+        [Fact]
+        public async Task Put_ReturnsNotFound_WhenUpdatingNonExistingStudent()
+        {
+            // Arrange
+            _mockStudentRepo.Setup(repo => repo.GetStudentById(It.IsAny<int>())).ReturnsAsync((Student)null);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() => _controller.Put(1, new UpdateStudentDto()));
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsOk_WhenDeletingExistingStudent()
+        {
+            // Arrange
+            var existingStudent = new Student { StudentId = 1, IsActive = true };
+
+            _mockStudentRepo.Setup(repo => repo.GetStudentById(1)).ReturnsAsync(existingStudent);
 
             // Act
             var result = await _controller.Delete(1);
@@ -61,132 +136,38 @@ namespace SchoolApi.Test
         }
 
         [Fact]
-        public async Task Delete_ShouldReturnBadRequest_WhenStudentIsAlreadyInactive()
+        public async Task Delete_ThrowsException_WhenDeletingNonExistingStudent()
         {
             // Arrange
-            _studentServiceMock.Setup(s => s.DeleteStudent(1)).ThrowsAsync(new InvalidOperationException("Student is already inactive."));
+            _mockStudentRepo.Setup(repo => repo.GetStudentById(It.IsAny<int>())).ReturnsAsync((Student)null);
 
-            // Act
-            var result = await _controller.Delete(1);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Student is already inactive.", badRequestResult.Value);
+            // Act & Assert
+            var exception  = await Assert.ThrowsAsync<Exception>(() => _controller.Delete(1));
+            Assert.Equal(ExceptionMessages.StudentNotFound, exception.Message);
         }
 
         [Fact]
-        public async Task StudentsSearch_ShouldReturnInternalServerError_OnException()
+        public async Task StudentsSearch_ReturnsPagedResponse_WhenSearchingStudents()
         {
             // Arrange
-            _studentServiceMock.Setup(s => s.GetSearchedStudents("Sanskruti", 1, 10)).ThrowsAsync(new Exception("Some error"));
-
-            // Act
-            var result = await _controller.StudentsSearch("Sanskruti", 1, 10);
-
-            // Assert
-            var internalServerErrorResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(500, internalServerErrorResult.StatusCode);
-        }
-
-        [Fact]
-        public async Task StudentsSearch_ShouldReturnOkResult_WithFilteredStudents()
-        {
-            // Arrange
-            var pagedResponse = new PagedResponse<Student>(
+             var pagedResponse = new PagedResponse<Student>(
                 new List<Student> { new Student { StudentId = 1, FirstName = "Abhishek", LastName = "Nyamati", StudentEmail = "abhishek@gmail.com", StudentGender = (Gender)1, StudentPhone = "1234567890", BirthDate = new DateTime(2000, 1, 1), StudentAge = 22, IsActive = true } },
                 pageNumber: 1,
                 pageSize: 5,
                 totalRecords: 1
             );
-            _studentServiceMock.Setup(s => s.GetSearchedStudents("Bruce", 1, 10)).ReturnsAsync(pagedResponse);
-            _mapperMock.Setup(m => m.Map<StudentRequestDto>(It.IsAny<Student>()))
-                .Returns(new StudentRequestDto { FirstName = "Bruce" });
+
+            _mockStudentRepo.Setup(repo => repo.GetSearchedStudents(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(pagedResponse);
 
             // Act
-            var result = await _controller.StudentsSearch("Bruce", 1, 10);
+            var result = await _controller.StudentsSearch("john");
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var response = Assert.IsAssignableFrom<PagedResponse<StudentRequestDto>>(okResult.Value);
-            Assert.Single(response.Data);
+            var returnValue = Assert.IsAssignableFrom<PagedResponse<StudentRequestDto>>(okResult.Value);
+            Assert.Single<StudentRequestDto>(returnValue.Data);
         }
-
-        [Fact]
-        public async Task Post_ShouldReturnOk_WhenStudentIsCreated()
-        {
-            // Arrange
-            var studentDto = new StudentPostDto { FirstName = "Sandeep", LastName = "joshi", BirthDate = DateTime.Now.AddYears(-20) , StudentGender=(Gender)1};
-            var mappedStudent = new Student { StudentId = 1, FirstName = "Sandeep", LastName = "joshi", StudentAge = 20 ,StudentGender = (Gender)1 };
-
-            
-            _studentServiceMock.Setup(s => s.AddStudent(It.IsAny<Student>())).ReturnsAsync(mappedStudent);
-            _mapperMock.Setup(m => m.Map<Student>(It.IsAny<StudentPostDto>())).Returns(mappedStudent);
-
-            // Act
-            var result = await _controller.Post(studentDto);
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<Student>(okResult.Value); // Adjusted to check if it returns Student
-            Assert.Equal(mappedStudent.FirstName, returnValue.FirstName);
-            Assert.Equal(mappedStudent.LastName, returnValue.LastName);
-        }
-
-        [Fact]
-        public async Task Post_ShouldReturnBadRequest_WhenValidationFails()
-        {
-            // Arrange
-            var studentDto = new StudentPostDto { FirstName = "", LastName = "Itkar", BirthDate = DateTime.Now.AddYears(-20) }; // Invalid first name
-            var validator = new StudentValidator();
-            var result = validator.Validate(studentDto);
-
-            // Act
-            var actionResult = await _controller.Post(studentDto);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(actionResult);
-            Assert.Contains("Property FirstName failed validation", badRequestResult.Value.ToString());
-        }
-
-
-        [Fact]
-        public async Task Put_ShouldReturnOk_WhenStudentIsUpdated()
-        {
-            // Arrange
-            var studentDto = new StudentPostDto { FirstName = "Sandeep", LastName = "Itkar", BirthDate = DateTime.Now.AddYears(-20),StudentGender=(Gender)1 };
-            var mappedStudent = new Student { StudentId = 1, FirstName = "Sandeep", LastName = "Itkar", StudentAge = 20,StudentGender=(Gender)1};
-
-            _studentServiceMock.Setup(s => s.UpdateStudent(1, It.IsAny<Student>())).Returns(Task.CompletedTask);
-            _mapperMock.Setup(m => m.Map<Student>(It.IsAny<StudentPostDto>())).Returns(mappedStudent);
-
-            // Act
-            var result = await _controller.Put(1, studentDto);
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal("Student with ID 1 updated successfully", okResult.Value);
-        }
-
-        [Fact]
-        public async Task Put_ShouldReturnNotFound_WhenStudentDoesNotExist()
-        {
-            // Arrange
-            var studentDto = new StudentPostDto { FirstName = "Sandeep", LastName = "joshi", BirthDate = DateTime.Now.AddYears(-20), StudentGender=(Gender)1 };
-            var mappedStudent = new Student { FirstName = "Sandeep", LastName = "joshi", StudentAge = 20 , StudentGender = (Gender)1 };
-
-            _studentServiceMock.Setup(s => s.UpdateStudent(1, It.IsAny<Student>())).ThrowsAsync(new StudentNotFoundException("Student with this ID does not exist"));
-            _mapperMock.Setup(m => m.Map<Student>(It.IsAny<StudentPostDto>())).Returns(mappedStudent);
-            // Act
-            var result = await _controller.Put(1, studentDto);
-
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-           
-
-            Assert.Equal("Student with this ID does not exist", notFoundResult.Value);
-        }
-
-
 
     }
 }

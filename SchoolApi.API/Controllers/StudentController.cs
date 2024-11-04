@@ -84,9 +84,9 @@ namespace SchoolApi.API.Controllers
             }
 
             
-            await _studentRepo.UpdateStudent(id, existingStudent);
+            await _studentRepo.UpdateStudent(existingStudent);
 
-            
+           
             return Ok(existingStudent);
         }
 
@@ -111,6 +111,15 @@ namespace SchoolApi.API.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> StudentsSearch(string search = "", int pageNumber = 1, int pageSize = 10)
         {
+            if (pageNumber < 1)
+            {
+                throw new Exception(ExceptionMessages.PaginationPageNumer);
+            }
+
+            if (pageSize <= 0 || pageSize > 100)
+            {
+                throw new Exception(ExceptionMessages.PaginationPageSize);
+            }
             var pagedResponse = await _studentRepo.GetSearchedStudents(search, pageNumber, pageSize);
 
             var dtoResponse = pagedResponse.Data.Select(s => _mapper.Map<StudentRequestDto>(s)).ToList();
