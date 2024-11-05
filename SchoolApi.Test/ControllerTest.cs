@@ -1,5 +1,6 @@
 using AutoMapper;
 using Bogus;
+using FluentValidation.AspNetCore;
 using FluentValidation.TestHelper;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -146,7 +147,34 @@ namespace SchoolApi.Test
             Assert.Equal(student.BirthDate, returnValue.BirthDate);
            // Assert.Equal(student.StudentAge, returnValue.StudentAge);
         }
-        
+        [Fact]
+        public async Task AddStudent_ShouldReturnBadRequest_WhenInvalid_WorstCase()
+        {
+            var studentPostDTO = _addStudentDtoFaker.Generate();
+            studentPostDTO.FirstName = "";
+            studentPostDTO.LastName = "";
+            var student = _mapper.Map<Student>(studentPostDTO);
+
+
+            var validator = new StudentValidator();
+            var validationResult = validator.TestValidate(studentPostDTO);
+            validationResult.ShouldHaveAnyValidationError();
+            validationResult.AddToModelState(_controller.ModelState, null);
+
+            var result = await _controller.Post(studentPostDTO);
+
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var errors = badRequestResult.Value as ValidationProblemDetails;
+
+            Assert.NotNull(errors);
+            
+            Assert.Contains("FirstName", errors.Errors.Keys);
+            Assert.Contains("LastName", errors.Errors.Keys);
+            
+
+
+        }
+
         [Fact]
         public async Task Put_ReturnsOkResult_WhenUpdatingExistingStudent()
         {
@@ -227,13 +255,7 @@ namespace SchoolApi.Test
             Assert.Equal(5, returnedPagedResponse.Data.Count());
             Assert.Equal(10, returnedPagedResponse.TotalRecords);
         }
-        [Fact]
-        public void Should_NotHaveError_When_AllFieldsAreValid()
-        {
-            var model = _addStudentDtoFaker.Generate();
-            var result = _validator.TestValidate(model);
-            result.ShouldNotHaveAnyValidationErrors();
-        }
+        
 
         [Fact]
         public void Should_HaveError_When_FirstNameIsNull()

@@ -46,7 +46,12 @@ namespace SchoolApi.API.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] StudentPostDto studentDto)
-        {       
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
             var mappedStudent = _mapper.Map<Student>(studentDto);
             mappedStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate);
 
@@ -57,7 +62,10 @@ namespace SchoolApi.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] UpdateStudentDto studentDto)
         {
-            
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
             var existingStudent = await _studentRepo.GetStudentById(id);
             if (existingStudent == null)
             {

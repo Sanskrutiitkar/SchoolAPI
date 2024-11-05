@@ -1,15 +1,47 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolApi.APi.Exceptions;
+using SchoolApi.API.DTOs;
 using SchoolApi.API.Exceptions;
 using SchoolApi.API.Mapper;
 using SchoolApi.Business.Data;
 using SchoolApi.Business.Repository;
 using SchoolApi.Business.Services;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
+// Add services to the container.
+builder.Services.AddControllers(options =>
+{
+    // Customize model state invalid response
+    options.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(_ => "This field is required.");
+}).ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var traceId = Guid.NewGuid(); // Generate a new Trace ID for each error response
+        var errors = context.ModelState
+            .Where(e => e.Value.Errors.Count > 0)
+            .ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Errors.Select(err => err.ErrorMessage).ToArray()
+            );
 
+        var errorDetails = new ErrorDetails
+        {
+            TraceId = traceId,
+            Message = "One or more validation errors occurred.",
+            StatusCode = (int)HttpStatusCode.BadRequest,
+            Instance = context.HttpContext.Request.Path,
+            ExceptionMessage = "Validation failed.",
+            Errors = errors // Assuming you add a property to ErrorDetails to hold validation errors
+        };
+
+        return new BadRequestObjectResult(errorDetails);
+    };
+});
 var serverVersion = ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("database"));
 
 //builder.Services.AddDbContext<StudentDbContext>(options =>
@@ -43,7 +75,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseMiddleware<CustomExceptionHandler>();
-app.UseMiddleware<CustomExceptionHandler>();
+
 
 if (app.Environment.IsDevelopment())
 {

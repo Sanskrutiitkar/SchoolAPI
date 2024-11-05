@@ -7,5 +7,6 @@
         public int StatusCode { get; set; }
         public string Instance { get; set; }
         public string ExceptionMessage { get; set; }
+        public IDictionary<string, string[]> Errors { get; set; }
     }
 }
