@@ -24,8 +24,7 @@ namespace SchoolApi.Test
             _studentRepo = new StudentRepo(_context);
         }
         public void Dispose()
-        {
-            // Clear the in-memory database after each test
+        {         
             _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
         }
@@ -38,7 +37,7 @@ namespace SchoolApi.Test
                 .RuleFor(s => s.StudentPhone, f => f.Phone.PhoneNumber())
                 .RuleFor(s => s.BirthDate, f => f.Date.Past(20))
                 .RuleFor(s => s.StudentAge, f => DateTime.Now.Year - f.Date.Past(20).Year)
-                .RuleFor(s => s.StudentGender, f => (Gender)f.Random.Int(1, 3))
+                .RuleFor(s => s.StudentGender, f => f.PickRandom<Gender>())
                 .RuleFor(s => s.IsActive, true); 
 
             return faker.Generate();
@@ -56,7 +55,19 @@ namespace SchoolApi.Test
             // Assert
             Assert.NotNull(result);
             Assert.Equal(student.FirstName, result.FirstName);
+            Assert.Equal(student.LastName, result.LastName);
+            Assert.Equal(student.StudentEmail, result.StudentEmail);
+            Assert.Equal(student.StudentPhone, result.StudentPhone);
+            Assert.Equal(student.BirthDate, result.BirthDate);
+            Assert.Equal(student.StudentAge, result.StudentAge);
+            Assert.Equal(student.StudentGender, result.StudentGender);
+            Assert.Equal(student.IsActive, result.IsActive);
             Assert.Equal(1, await _context.Students.CountAsync());
+        }
+        [Fact]
+        public async Task Add_ShouldThrowException_WhenStudentIsNull()
+        {
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _studentRepo.AddStudent(null));
         }
 
         [Fact]
@@ -77,6 +88,18 @@ namespace SchoolApi.Test
 
             // Assert
             Assert.Equal(2, result.Count());
+              
+        }
+        [Fact]
+        public async Task GetAll_ShouldReturnEmpty_WhenNoActiveStudents_WorstCase()
+        {
+            var student1 = GenerateFakeStudent();
+            student1.IsActive = false;
+            await _studentRepo.AddStudent(student1);
+
+            var result = await _studentRepo.GetAllStudents();
+
+            Assert.Empty(result);
         }
 
         [Fact]
@@ -84,8 +107,8 @@ namespace SchoolApi.Test
         {
             // Arrange
             var student = GenerateFakeStudent();
-            await _context.Students.AddAsync(student);
-            await _context.SaveChangesAsync();
+            await _studentRepo.AddStudent(student);
+           
 
             // Act
             await _studentRepo.DeleteStudent(student.StudentId);
@@ -95,32 +118,42 @@ namespace SchoolApi.Test
             Assert.False(deletedStudent.IsActive);
         }
 
+
         [Fact]
         public async Task GetSearchedStudents_ShouldReturnFilteredResults()
         {
             // Arrange
             var student1 = GenerateFakeStudent();
-            student1.FirstName = "Alice"; // Set specific name for search
+            student1.FirstName = "sanskruti"; 
             var student2 = GenerateFakeStudent();
 
             await _context.Students.AddRangeAsync(new[] { student1, student2 });
             await _context.SaveChangesAsync();
 
             // Act
-            var result = await _studentRepo.GetSearchedStudents("Alice", 1, 10);
+            var result = await _studentRepo.GetSearchedStudents("sanskruti", 1, 10);
 
             // Assert
             Assert.Single(result.Data);
-            Assert.Equal("Alice", result.Data.First().FirstName);
+            Assert.Equal("sanskruti", result.Data.First().FirstName);
         }
+        [Fact]
+        public async Task FilterStudents_ShouldReturnEmpty_WhenNoMatches_WorstCase()
+        {
+            var student1 = GenerateFakeStudent();
+            await _studentRepo.AddStudent(student1);
 
+            var result = await _studentRepo.GetSearchedStudents("NonExistent",1, 10);
+
+            Assert.Empty(result.Data);
+            Assert.Equal(0, result.TotalRecords);
+        }
         [Fact]
         public async Task GetStudentById_ShouldReturnCorrectStudent()
         {
             // Arrange
             var student = GenerateFakeStudent();
-            await _context.Students.AddAsync(student);
-            await _context.SaveChangesAsync();
+            await _studentRepo.AddStudent(student);
 
             // Act
             var result = await _studentRepo.GetStudentById(student.StudentId);
@@ -128,32 +161,36 @@ namespace SchoolApi.Test
             // Assert
             Assert.NotNull(result);
             Assert.Equal(student.StudentId, result.StudentId);
+            Assert.Equal(student.FirstName, result.FirstName);
+            Assert.Equal(student.LastName, result.LastName);
+            Assert.Equal(student.StudentEmail, result.StudentEmail);
+            Assert.Equal(student.StudentPhone, result.StudentPhone);
+            Assert.Equal(student.BirthDate, result.BirthDate);
+            Assert.Equal(student.StudentAge, result.StudentAge);
+            Assert.Equal(student.StudentGender, result.StudentGender);
+            Assert.Equal(student.IsActive, result.IsActive);
         }
+        [Fact]
+        public async Task GetById_ShouldReturnNull_WhenNotExists_WorstCase()
+        {
+            var result = await _studentRepo.GetStudentById(999);
+            Assert.Null(result);
+        }
+        [Fact]
+        public async Task UpdateStudent_ShouldUpdateExistingStudent()
+        {
+            // Arrange
+            var student = GenerateFakeStudent();
+            await _studentRepo.AddStudent(student);          
+            student.FirstName = "sanskruti";
 
-        //[Fact]
-        //public async Task UpdateStudent_ShouldUpdateExistingStudent()
-        //{
-        //    // Arrange
-        //    var student = GenerateFakeStudent();
-        //    await _context.Students.AddAsync(student);
-        //    await _context.SaveChangesAsync();
+            // Act
+            await _studentRepo.UpdateStudent(student);
 
-        //    var updatedData = new Student
-        //    {
-        //        FirstName = "UpdatedFirstName",
-        //        LastName = "UpdatedLastName",
-        //        StudentEmail = "updatedemail@example.com",
+            // Assert
+            var updatedStudent = await _context.Students.FindAsync(student.StudentId);
+            Assert.Equal("sanskruti", updatedStudent.FirstName);
 
-        //    };
-
-        //    // Act
-        //    await _studentRepo.UpdateStudent(updatedData);
-
-        //    // Assert
-        //    var updatedStudent = await _context.Students.FindAsync(student.StudentId);
-        //    Assert.Equal("UpdatedFirstName", updatedStudent.FirstName);
-        //    Assert.Equal("UpdatedLastName", updatedStudent.LastName);
-        //    Assert.Equal("updatedemail@example.com", updatedStudent.StudentEmail);
-        //}
+        }
     }
 }

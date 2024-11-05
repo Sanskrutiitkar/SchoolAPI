@@ -10,7 +10,7 @@ namespace SchoolApi.Business.Repository
         Task<Student> AddStudent(Student student);
         Task DeleteStudent(int studentID);
         Task<IEnumerable<Student>> GetAllStudents();
-        Task UpdateStudent(Student student);
+        Task<Student> UpdateStudent(Student student);
         Task<PagedResponse<Student>> GetSearchedStudents(string search, int pageNumber, int pageSize);
     }
 }

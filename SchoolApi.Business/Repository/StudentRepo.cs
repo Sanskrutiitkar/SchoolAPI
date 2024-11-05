@@ -26,13 +26,12 @@ namespace SchoolApi.Business.Repository
             var student = await _context.Students.FindAsync(studentID);         
             student.IsActive = false; 
             await _context.SaveChangesAsync();
-            
-          
+                     
         }
 
         public async Task<IEnumerable<Student>> GetAllStudents()
         {
-            return await _context.Students.ToListAsync() ?? new List<Student>();
+            return await _context.Students.Where(s=>s.IsActive==true).ToListAsync() ?? new List<Student>();
         }
 
         public async Task<Student> GetStudentById(int id)
@@ -40,10 +39,10 @@ namespace SchoolApi.Business.Repository
             return await _context.Students.FindAsync(id); 
         }
 
-        public async Task UpdateStudent(Student student)
-        {          
-           
-            await _context.SaveChangesAsync();                   
+        public async Task<Student> UpdateStudent(Student student)
+        {                    
+            await _context.SaveChangesAsync();
+            return student;
         }
 
         public async Task<PagedResponse<Student>> GetSearchedStudents(string search, int pageNumber, int pageSize)

@@ -84,10 +84,10 @@ namespace SchoolApi.API.Controllers
             }
 
             
-            await _studentRepo.UpdateStudent(existingStudent);
+            var returnedStudent = await _studentRepo.UpdateStudent(existingStudent);
+            var mappedStudent = _mapper.Map<StudentRequestDto>(returnedStudent);
 
-           
-            return Ok(existingStudent);
+            return Ok(mappedStudent);
         }
 
         [HttpDelete("{id}")]
@@ -109,7 +109,7 @@ namespace SchoolApi.API.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> StudentsSearch(string search = "", int pageNumber = 1, int pageSize = 10)
+        public async Task<ActionResult<PagedResponse<StudentRequestDto>>> StudentsSearch(string search = "", int pageNumber = 1, int pageSize = 10)
         {
             if (pageNumber < 1)
             {

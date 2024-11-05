@@ -5,7 +5,7 @@ namespace SchoolApi.API.DTOs
 {
     public class StudentPostDto
     {
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = "";
 
         public string LastName { get; set; }
 
