@@ -11,7 +11,7 @@ namespace SchoolProject.Api.DTOs
         public string Message { get; set; }
         public int StatusCode { get; set; }
         public string ExceptionMessage { get; set; }
-        public IDictionary<string, List<String>> Errors { get; set; }
+        public IDictionary<string, List<string>> Errors { get; set; }
    
     }
-    }
+}

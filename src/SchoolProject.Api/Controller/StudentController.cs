@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolProject.Api.DTOs;
 using SchoolProject.Api.Exceptions;
@@ -19,6 +20,7 @@ namespace SchoolProject.Api.Controller
     [ApiController]
     [Route("api/[controller]")]
     [ServiceFilter(typeof(ModelValidationFilter))] 
+    [Authorize(Roles ="Admin")]
     public class StudentController : ControllerBase
     {
         

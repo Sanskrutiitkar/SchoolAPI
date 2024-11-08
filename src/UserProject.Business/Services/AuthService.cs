@@ -42,7 +42,7 @@ namespace UserProject.Business.Services
             {
                 new Claim("Name", user.UserName ?? throw new ArgumentNullException(nameof(user.UserName))),
                 new Claim("Email", user.UserEmail ?? throw new ArgumentNullException(nameof(user.UserEmail))),
-                new Claim("Role", user.IsAdmin ? "Admin" : "Teacher"),
+                new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "Teacher"),
                 new Claim("Status", user.IsActive ? "Active" : "Inactive")
             });
         }

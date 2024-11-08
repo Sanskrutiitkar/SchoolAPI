@@ -39,5 +39,9 @@ namespace UserProject.Business.Repository
             Users? user = await _context.Users.FindAsync(userId);
             return user;
         }
+        public async Task<Users> GetUserByEmail(string userEmail)
+        {
+            return await _context.Users.FirstOrDefaultAsync(s => s.UserEmail == userEmail) ?? new Users();            
+        }
     }
 }

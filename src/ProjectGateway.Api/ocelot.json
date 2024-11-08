@@ -1,0 +1,19 @@
+
+{
+    "Routes": [
+        {
+            "DownstreamPathTemplate": "/api/Student",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5299
+                }
+            ],
+            "UpstreamPathTemplate": "/students/get",
+            "UpstreamHttpMethod": [
+                "GET"
+            ]
+        }
+    ]
+}
