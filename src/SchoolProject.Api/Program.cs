@@ -14,6 +14,7 @@ using SchoolProject.Buisness.Data;
 using SchoolProject.Buisness.Repository;
 using SchoolProject.Buisness.Services;
 using System.Net;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -109,6 +110,7 @@ builder.Services.AddSwaggerGen(opt =>
             new string[]{}
         }
     });
+     opt.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
 });
  
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -147,10 +149,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
  
     });
 var app = builder.Build();
-
-
-
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

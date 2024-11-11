@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SchoolProject.Api.DTOs
+namespace UserProject.Api.DTOs
 {
     public class ErrorDetails
     {

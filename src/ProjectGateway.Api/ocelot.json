@@ -10,7 +10,7 @@
                     "Port": 5299
                 }
             ],
-            "UpstreamPathTemplate": "/students/get",
+            "UpstreamPathTemplate": "/students",
             "UpstreamHttpMethod": [
                 "GET"
             ]

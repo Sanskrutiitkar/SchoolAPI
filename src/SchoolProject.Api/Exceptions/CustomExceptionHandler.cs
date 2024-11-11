@@ -21,7 +21,7 @@ namespace SchoolProject.Api.Exceptions
                     Message = "Not Found",
                     ExceptionMessage = exception.Message
                 };
-
+                httpContext.Response.StatusCode=StatusCodes.Status404NotFound;
                 await httpContext.Response.WriteAsJsonAsync(response);
                 return true;
             }
@@ -32,18 +32,18 @@ namespace SchoolProject.Api.Exceptions
                     Message = "Duplicate Entry",
                     ExceptionMessage = exception.Message
                 };
-
+                httpContext.Response.StatusCode=StatusCodes.Status409Conflict;
                 await httpContext.Response.WriteAsJsonAsync(response);
                 return true;
             }
-            else if(exception is DuplicateEntryException){
+            else if(exception is PagedResponseException){
                 var response = new ErrorDetails()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
                     Message = "Invalid values",
                     ExceptionMessage = exception.Message
                 };
-
+                httpContext.Response.StatusCode=StatusCodes.Status400BadRequest;
                 await httpContext.Response.WriteAsJsonAsync(response);
                 return true;
             }

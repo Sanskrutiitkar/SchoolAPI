@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using UserProject.Api.DTOs;
+using UserProject.Api.Exceptions;
+using UserProject.Api.GlobalException;
 using UserProject.Business.Models;
 using UserProject.Business.Repository;
 
@@ -27,14 +29,13 @@ namespace UserProject.Api.Controller
 
         }
 
-        [HttpPost("register")]
+        [HttpPost]
         public async Task<ActionResult<UserRegistrationDto>> Register([FromBody] UserRegistrationDto registrationDto)
         {
-
             var existingUser = await _userRepo.GetUserByEmail(registrationDto.UserEmail);
-            if (existingUser == null)
+            if (existingUser != null)
             {
-                return BadRequest("User with this email already exists.");
+                throw new DuplicateEntryException(ExceptionMessages.AlreadyExists);
             }
 
             var newUser = _mapper.Map<Users>(registrationDto);
@@ -42,6 +43,47 @@ namespace UserProject.Api.Controller
             var mappedUser = _mapper.Map<UserRegistrationDto>(createdUser);
             return Ok(mappedUser);
         }
+
+        [HttpGet]
+        public async Task<ActionResult<UserRequestDto>> Get(){
+            var users = await _userRepo.GetAllUser();
+            var dtoResponse = _mapper.Map<IEnumerable<UserRequestDto>>(users);
+            if(dtoResponse.Count()==0){
+                return NotFound(dtoResponse);
+            }
+                    
+            return Ok(dtoResponse);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var existingUser = await _userRepo.GetUserById(id);
+            if (existingUser == null){
+                return NotFound(ExceptionMessages.UserNotFound);
+            }
+            if(!existingUser.IsActive)
+            {
+                return NotFound(ExceptionMessages.AlreadyInactive);
+            }
+         
+            await _userRepo.DeleteUser(id);
+            return Ok();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UserRequestDto>> GetStudentById(int id)
+        {
+            var user = await _userRepo.GetUserById(id);
+            if (user == null)
+            {
+                return NotFound(ExceptionMessages.UserNotFound);
+            }
+
+            var dtoResponse = _mapper.Map<UserRequestDto>(user);
+            return Ok(dtoResponse);
+        }
+
 
 
     }

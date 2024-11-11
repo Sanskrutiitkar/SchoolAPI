@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SchoolProject.Api.DTOs;
 using SchoolProject.Api.Exceptions;
@@ -13,6 +14,7 @@ using SchoolProject.Api.Validators;
 using SchoolProject.Buisness.Models;
 using SchoolProject.Buisness.Repository;
 using SchoolProject.Buisness.Services;
+using Swashbuckle.AspNetCore.Annotations;
 
 
 namespace SchoolProject.Api.Controller
@@ -20,7 +22,7 @@ namespace SchoolProject.Api.Controller
     [ApiController]
     [Route("api/[controller]")]
     [ServiceFilter(typeof(ModelValidationFilter))] 
-    [Authorize(Roles ="Admin")]
+    //[Authorize(Roles ="Admin")]
     public class StudentController : ControllerBase
     {
         
@@ -34,32 +36,72 @@ namespace SchoolProject.Api.Controller
             _mapper = mapper;
             _studentRepo = studentRepo;
         }
-
-        [HttpGet]
+    /// <summary>
+    /// Retrieves a list of all students.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint returns a collection of student data transfer objects (DTOs).
+    /// If no students are found, an empty list will be returned.
+    /// </remarks>
+    /// <returns>A list of <see cref="StudentRequestDto"/> objects.</returns>
+    /// <response code="200">Returns the list of students or an empty list if no students are found</response>
+    /// <response code="404">If no students are found in the database</response>
+    [HttpGet]
+    [SwaggerOperation(Summary = "Get all students", Description = "Retrieves a list of all students.")]
+    [ProducesResponseType(typeof(IEnumerable<StudentRequestDto>), StatusCodes.Status200OK)]
+        
         public async Task<ActionResult<StudentRequestDto>> Get()
         {
             var students = await _studentRepo.GetAllStudents();
-            if(students.Count()==0){
-                throw new StudentNotFoundException(ExceptionMessages.StudentNotFound);
+            var dtoResponse = _mapper.Map<IEnumerable<StudentRequestDto>>(students);
+            if(dtoResponse.Count()==0){
+                return NotFound(dtoResponse);
             }
-            var dtoResponse = _mapper.Map<IEnumerable<StudentRequestDto>>(students);            
+                    
             return Ok(dtoResponse);
         }
 
+        /// <summary>
+        /// Retrieves a student by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the student to retrieve.</param>
+        /// <remarks>
+        /// This endpoint returns a single student data transfer object (DTO).
+        /// If the student is not found, a 404 Not Found status will be returned.
+        /// </remarks>
+        /// <returns>A <see cref="StudentRequestDto"/> object representing the student.</returns>
+        /// <response code="200">Returns the student DTO if found</response>
+        /// <response code="404">If no student is found with the specified ID</response>
         [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Get student by ID", Description = "Retrieves a student by their ID.")]
+        [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<StudentRequestDto>> GetStudentById(int id)
         {
             var student = await _studentRepo.GetStudentById(id);
             if (student == null)
             {
-                throw new StudentNotFoundException(ExceptionMessages.StudentNotFound);
+                return NotFound(ExceptionMessages.StudentNotFound);
             }
 
             var dtoResponse = _mapper.Map<StudentRequestDto>(student);
             return Ok(dtoResponse);
         }
 
+        /// <summary>
+        /// Creates a new student.
+        /// </summary>
+        /// <param name="studentDto">The student data transfer object containing the student's details.</param>
+        /// <remarks>
+        /// This endpoint adds a new student to the system. If a duplicate entry is detected,
+        /// a 409 Conflict status will be returned with an error message.
+        /// </remarks>
+        /// <returns>A <see cref="StudentRequestDto"/> object representing the created student.</returns>
+        /// <response code="200">Returns the created student DTO</response>
+        /// <response code="409">If a duplicate entry is detected</response>
         [HttpPost]
+        [SwaggerOperation(Summary = "Create a new student", Description = "Adds a new student to the system.")]
+        [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]      
         public async Task<ActionResult<StudentRequestDto>> Post([FromBody] StudentPostDto studentDto)
         {
             
@@ -67,23 +109,38 @@ namespace SchoolProject.Api.Controller
             
             mappedStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate);
             Student isDuplicate = await _studentRepo.CheckDuplicate(mappedStudent);
-            if(isDuplicate != null){
-                await _studentRepo.AddStudent(mappedStudent);
-                var returnStudent = _mapper.Map<StudentRequestDto>(mappedStudent);
-                return Ok(returnStudent);
+            if(isDuplicate == null){
+                var returnStudent = await _studentRepo.AddStudent(mappedStudent);
+                var  returnMappedStudent= _mapper.Map<StudentRequestDto>(returnStudent);
+                return Ok(returnMappedStudent);
             }
             throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
 
         }
 
+       /// <summary>
+        /// Updates an existing student by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the student to update.</param>
+        /// <param name="studentDto">The updated student data transfer object containing the student's new details.</param>
+        /// <remarks>
+        /// This endpoint updates the details of an existing student. If the student is not found,
+        /// a 404 Not Found status will be returned.
+        /// </remarks>
+        /// <returns>A <see cref="StudentRequestDto"/> object representing the updated student.</returns>
+        /// <response code="200">Returns the updated student DTO</response>
+        /// <response code="404">If no student is found with the specified ID</response>
         [HttpPut("{id}")]
+        [SwaggerOperation(Summary = "Update an existing student", Description = "Updates a student's details by their ID.")]
+        [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]
+
         public async Task<ActionResult<StudentRequestDto>> Put(int id, [FromBody] UpdateStudentDto studentDto)
         {
 
             var existingStudent = await _studentRepo.GetStudentById(id);
             if (existingStudent == null)
             {
-                throw new StudentNotFoundException(ExceptionMessages.StudentNotFound); 
+                return NotFound (ExceptionMessages.StudentNotFound); 
             }
 
          
@@ -112,20 +169,49 @@ namespace SchoolProject.Api.Controller
             return Ok(mappedStudent);
         }
 
+        /// <summary>
+        /// Deletes a student by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the student to delete.</param>
+        /// <remarks>
+        /// This endpoint deletes an existing student from the system. If the student is not found
+        /// or is already inactive, a 404 Not Found status will be returned.
+        /// </remarks>
+        /// <response code="200">Indicates that the student was successfully deleted</response>
+        /// <response code="404">If no student is found with the specified ID or if the student is inactive</response>
         [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "Delete a student", Description = "Deletes a student by their ID.")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+ 
         public async Task<IActionResult> Delete(int id)
         {
             var existingStudent = await _studentRepo.GetStudentById(id);
             if (existingStudent == null || !existingStudent.IsActive)
             {
-                throw new StudentNotFoundException(ExceptionMessages.StudentNotFound);
+                return NotFound(ExceptionMessages.StudentNotFound);
             }
          
             await _studentRepo.DeleteStudent(id);
             return Ok();
         }
 
+        /// <summary>
+        /// Searches for students based on a search term and supports pagination.
+        /// </summary>
+        /// <param name="search">The search term to filter students by (optional).</param>
+        /// <param name="pageNumber">The page number for pagination (default is 1).</param>
+        /// <param name="pageSize">The number of records per page (default is 10, maximum is 100).</param>
+        /// <remarks>
+        /// This endpoint returns a paginated list of students matching the search criteria.
+        /// If the page number is less than 1 or the page size is invalid, a PagedResponseException will be thrown.
+        /// </remarks>
+        /// <returns>A <see cref="PagedResponse{StudentRequestDto}"/> containing the paginated student data.</returns>
+        /// <response code="200">Returns the paginated list of students</response>
+        /// <response code="400">If the pagination parameters are invalid</response>
         [HttpGet("search")]
+        [SwaggerOperation(Summary = "Search for students", Description = "Retrieves a paginated list of students based on a search term.")]
+        [ProducesResponseType(typeof(PagedResponse<StudentRequestDto>), StatusCodes.Status200OK)]
+
         public async Task<ActionResult<PagedResponse<StudentRequestDto>>> StudentsSearch(string search = "", int pageNumber = 1, int pageSize = 10)
         {
             if (pageNumber < 1)

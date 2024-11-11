@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UserProject.Api.DTOs;
+using UserProject.Api.Exceptions;
 using UserProject.Business.Services;
 
 namespace UserProject.Api.Controller
@@ -20,7 +21,7 @@ namespace UserProject.Api.Controller
         }
 
 
-        [HttpPost("login")]
+        [HttpPost]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
         {
             try
@@ -30,7 +31,7 @@ namespace UserProject.Api.Controller
             }
             catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new { Message = "Invalid username or password." });
+                return Unauthorized(ExceptionMessages.InvalidCredentials);
             }
         }
     }

@@ -68,7 +68,7 @@ namespace SchoolProject.Buisness.Repository
 
         public async Task<Student> CheckDuplicate(Student student)
         {
-            return await _context.Students.FirstOrDefaultAsync(s => s.StudentEmail == student.StudentEmail) ?? new Student();           
+            return await _context.Students.FirstOrDefaultAsync(s => s.StudentEmail == student.StudentEmail);           
         }
     }
 }

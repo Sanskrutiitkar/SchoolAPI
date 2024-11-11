@@ -15,6 +15,7 @@ namespace UserProject.Api.Mapper
         {
             CreateMap<LoginRequestDto, Users>().ReverseMap();
             CreateMap<UserRegistrationDto, Users>().ReverseMap();
+            CreateMap<UserRequestDto,Users>().ReverseMap();
 
         }
     }
