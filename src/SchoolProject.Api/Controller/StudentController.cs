@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using SchoolProject.Api.Constants;
 using SchoolProject.Api.DTOs;
 using SchoolProject.Api.Exceptions;
 using SchoolProject.Api.Filter;
@@ -23,7 +24,7 @@ namespace SchoolProject.Api.Controller
     [Route("api/[controller]")]
     [ServiceFilter(typeof(ModelValidationFilter))] 
     [ServiceFilter(typeof(APILoggingFilter))] 
-    
+    [Authorize(Roles =RoleConstant.Admin)]
     public class StudentController : ControllerBase
     {
         
@@ -50,7 +51,7 @@ namespace SchoolProject.Api.Controller
     [HttpGet]
     [SwaggerOperation(Summary = "Get all students", Description = "Retrieves a list of all students.")]
     [ProducesResponseType(typeof(IEnumerable<StudentRequestDto>), StatusCodes.Status200OK)]
-    [Authorize(Roles ="Admin,Teacher")] 
+    [Authorize(Roles = $"{RoleConstant.Teacher},{RoleConstant.Admin}" )] 
         public async Task<ActionResult<StudentRequestDto>> Get()
         {
             var students = await _studentRepo.GetAllStudents();
@@ -77,7 +78,7 @@ namespace SchoolProject.Api.Controller
         [SwaggerOperation(Summary = "Get student by ID", Description = "Retrieves a student by their ID.")]
         [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles ="Admin,Teacher")]
+        [Authorize(Roles = $"{RoleConstant.Teacher},{RoleConstant.Admin}" )] 
         public async Task<ActionResult<StudentRequestDto>> GetStudentById(int id)
         {
             var student = await _studentRepo.GetStudentById(id);
@@ -104,7 +105,7 @@ namespace SchoolProject.Api.Controller
         [HttpPost]
         [SwaggerOperation(Summary = "Create a new student", Description = "Adds a new student to the system.")]
         [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]   
-        [Authorize(Roles ="Admin")]   
+          
         public async Task<ActionResult<StudentRequestDto>> Post([FromBody] StudentPostDto studentDto)
         {
             
@@ -136,7 +137,7 @@ namespace SchoolProject.Api.Controller
         [HttpPut("{id}")]
         [SwaggerOperation(Summary = "Update an existing student", Description = "Updates a student's details by their ID.")]
         [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]
-        [Authorize(Roles ="Admin")]
+        
         public async Task<ActionResult<StudentRequestDto>> Put(int id, [FromBody] UpdateStudentDto studentDto)
         {
 
@@ -185,7 +186,7 @@ namespace SchoolProject.Api.Controller
         [HttpDelete("{id}")]
         [SwaggerOperation(Summary = "Delete a student", Description = "Deletes a student by their ID.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [Authorize(Roles ="Admin")]
+        
         public async Task<IActionResult> Delete(int id)
         {
             var existingStudent = await _studentRepo.GetStudentById(id);
@@ -214,7 +215,7 @@ namespace SchoolProject.Api.Controller
         [HttpGet("search")]
         [SwaggerOperation(Summary = "Search for students", Description = "Retrieves a paginated list of students based on a search term.")]
         [ProducesResponseType(typeof(PagedResponse<StudentRequestDto>), StatusCodes.Status200OK)]
-        [Authorize(Roles ="Admin,Teacher")]
+        [Authorize(Roles = $"{RoleConstant.Teacher},{RoleConstant.Admin}" )] 
 
         public async Task<ActionResult<PagedResponse<StudentRequestDto>>> StudentsSearch(string search = "", int pageNumber = 1, int pageSize = 10)
         {

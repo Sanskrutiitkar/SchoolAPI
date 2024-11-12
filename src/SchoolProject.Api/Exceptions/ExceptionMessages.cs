@@ -14,4 +14,5 @@ namespace SchoolProject.Api.Exceptions
         public const string DuplicateEntry = "This email is already used";
   
     }
+    
 }
