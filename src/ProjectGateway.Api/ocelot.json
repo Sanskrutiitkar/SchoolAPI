@@ -12,7 +12,52 @@
             ],
             "UpstreamPathTemplate": "/students",
             "UpstreamHttpMethod": [
+                "GET","POST"
+            ]
+        },
+        {
+            "DownstreamPathTemplate": "/api/Student/{id}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5299
+                }
+            ],
+            "UpstreamPathTemplate": "/students/{id}",
+            "UpstreamHttpMethod": [
+                "PUT","DELETE","GET"
+            ]
+        },
+        {
+            "DownstreamPathTemplate": "/api/Student/search",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5299
+                }
+            ],
+            "UpstreamPathTemplate": "/students/search",
+            "UpstreamHttpMethod": [
                 "GET"
+            ]
+        },
+        {
+            "DownstreamPathTemplate": "/api/Student/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5299
+                }
+            ],
+            "UpstreamPathTemplate": "/sanskruti/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
             ]
         }
     ]

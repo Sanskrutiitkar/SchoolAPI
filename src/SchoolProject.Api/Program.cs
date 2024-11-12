@@ -13,6 +13,7 @@ using SchoolProject.Api.Validators;
 using SchoolProject.Buisness.Data;
 using SchoolProject.Buisness.Repository;
 using SchoolProject.Buisness.Services;
+using Serilog;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -148,6 +149,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
  
     });
+builder.Services.AddScoped<APILoggingFilter>();
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+    
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {

@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -79,6 +80,9 @@ builder.Services.AddSwaggerGen(opt =>
             new string[]{}
         }
     });
+
+     opt.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+
 });
  
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

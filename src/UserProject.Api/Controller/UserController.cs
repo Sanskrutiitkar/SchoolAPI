@@ -28,8 +28,16 @@ namespace UserProject.Api.Controller
             _mapper = mapper;
 
         }
-
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
+        /// <param name="registrationDto">The user registration data.</param>
+        /// <returns>A UserRegistrationDto object representing the created user.</returns>
+        /// <response code="200">Returns the created user</response>
+        /// <response code="400">If the registration data is invalid</response>
+        /// <response code="409">If a user with the same email already exists</response>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserRegistrationDto))] 
         public async Task<ActionResult<UserRegistrationDto>> Register([FromBody] UserRegistrationDto registrationDto)
         {
             var existingUser = await _userRepo.GetUserByEmail(registrationDto.UserEmail);
@@ -43,8 +51,15 @@ namespace UserProject.Api.Controller
             var mappedUser = _mapper.Map<UserRegistrationDto>(createdUser);
             return Ok(mappedUser);
         }
-
-        [HttpGet]
+        /// <summary>
+        /// Retrieves all users.
+        /// </summary>
+        /// <returns>A list of UserRequestDto objects representing all users.</returns>
+        /// <response code="200">Returns a list of users</response>
+        /// <response code="404">If no users are found</response>
+        [HttpGet]  
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserRequestDto>))] 
+       
         public async Task<ActionResult<UserRequestDto>> Get(){
             var users = await _userRepo.GetAllUser();
             var dtoResponse = _mapper.Map<IEnumerable<UserRequestDto>>(users);
@@ -55,7 +70,15 @@ namespace UserProject.Api.Controller
             return Ok(dtoResponse);
         }
 
-        [HttpDelete("{id}")]
+        /// <summary>
+        /// Deletes a user by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to delete.</param>
+        /// <returns>No content if the deletion is successful.</returns>
+        /// <response code="200">User successfully deleted</response>
+        /// <response code="404">If the user is not found or already inactive</response>
+        [HttpDelete("{id}")]   
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Delete(int id)
         {
             var existingUser = await _userRepo.GetUserById(id);
@@ -70,8 +93,15 @@ namespace UserProject.Api.Controller
             await _userRepo.DeleteUser(id);
             return Ok();
         }
-
+        /// <summary>
+        /// Retrieves a user by their ID.
+        /// </summary>
+        /// <param name="id">The ID of the user to retrieve.</param>
+        /// <returns>A UserRequestDto object representing the user.</returns>
+        /// <response code="200">Returns the user details</response>
+        /// <response code="404">If the user is not found</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserRequestDto))] 
         public async Task<ActionResult<UserRequestDto>> GetStudentById(int id)
         {
             var user = await _userRepo.GetUserById(id);
