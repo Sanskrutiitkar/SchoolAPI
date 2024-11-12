@@ -13,42 +13,38 @@ namespace SchoolProject.Api.Exceptions
     {
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            if(exception is StudentNotFoundException)
+ 
+            if (exception is StudentNotFoundException)
             {
-                var response = new ErrorDetails()
-                {
-                    StatusCode = StatusCodes.Status404NotFound,
-                    Message = "Not Found",
-                    ExceptionMessage = exception.Message
-                };
-                httpContext.Response.StatusCode=StatusCodes.Status404NotFound;
-                await httpContext.Response.WriteAsJsonAsync(response);
+                await HandleExceptionAsync(httpContext, StatusCodes.Status404NotFound, "Not Found", exception.Message);
                 return true;
             }
-            else if(exception is DuplicateEntryException){
-                var response = new ErrorDetails()
-                {
-                    StatusCode = StatusCodes.Status409Conflict,
-                    Message = "Duplicate Entry",
-                    ExceptionMessage = exception.Message
-                };
-                httpContext.Response.StatusCode=StatusCodes.Status409Conflict;
-                await httpContext.Response.WriteAsJsonAsync(response);
+            else if (exception is DuplicateEntryException)
+            {
+                await HandleExceptionAsync(httpContext, StatusCodes.Status409Conflict, "Duplicate Entry", exception.Message);
                 return true;
             }
-            else if(exception is PagedResponseException){
-                var response = new ErrorDetails()
-                {
-                    StatusCode = StatusCodes.Status400BadRequest,
-                    Message = "Invalid values",
-                    ExceptionMessage = exception.Message
-                };
-                httpContext.Response.StatusCode=StatusCodes.Status400BadRequest;
-                await httpContext.Response.WriteAsJsonAsync(response);
+            else if (exception is PagedResponseException)
+            {
+                await HandleExceptionAsync(httpContext, StatusCodes.Status400BadRequest, "Invalid values", exception.Message);
                 return true;
             }
-             
-            return false;
+
+            await HandleExceptionAsync(httpContext, StatusCodes.Status500InternalServerError, "Internal server error", exception.Message);
+            return false; 
+        }
+
+        private async Task HandleExceptionAsync(HttpContext httpContext, int statusCode, string message, string exceptionMessage)
+        {
+            var response = new ErrorDetails()
+            {
+                StatusCode = statusCode,
+                Message = message,
+                ExceptionMessage = exceptionMessage
+            };
+
+            httpContext.Response.StatusCode = statusCode;
+            await httpContext.Response.WriteAsJsonAsync(response);
         }
     }
 }
