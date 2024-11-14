@@ -8,7 +8,7 @@ namespace UserProject.Api.DTOs
 {
     public class LoginRequestDto
     {       
-        public required string UserEmail { get; set; } 
-        public required string Password { get; set; } 
+        public string UserEmail { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

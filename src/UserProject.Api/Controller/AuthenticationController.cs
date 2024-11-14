@@ -28,31 +28,13 @@ namespace UserProject.Api.Controller
         [HttpPost]  
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))] 
  
-        // public async Task<IActionResult> Login(LoginRequestDto loginRequest)
-        // {
-        //     try
-        //     {
-        //         var token = await _authService.Login(loginRequest.UserEmail, loginRequest.Password);
-        //         return Ok(new { Token = token });
-        //     }
-        //     catch (UnauthorizedAccessException)
-        //     {
-        //         return Unauthorized(new { message = ExceptionMessages.InvalidCredentials});
-        //     }  
-        // }
-        public async Task<string> Login(string userEmail, string password)
+        public async Task<string> Login(LoginRequestDto loginRequest)
         {
-            var user = await _authService.ValidateUser(userEmail, password);
+            var user = await _authService.ValidateUser(loginRequest.UserEmail, loginRequest.Password);
             if (user == null)
             {
                 throw new UnauthorizedAccessException("Invalid username or password");
             }
-
-            // Validate the password by comparing the entered password's hash with the stored hash
-            // if (!_authService.VerifyPassword(password, user.UserPassword, user.PasswordSalt))
-            // {
-            //     throw new UnauthorizedAccessException("Invalid username or password");
-            // }
 
             var claims = await  _authService.GenerateClaims(user);
             var token = _authService.GenerateToken(claims);

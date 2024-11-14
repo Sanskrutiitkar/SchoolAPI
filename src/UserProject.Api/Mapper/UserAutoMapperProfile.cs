@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 using UserProject.Api.DTOs;
 using UserProject.Business.Models;
 

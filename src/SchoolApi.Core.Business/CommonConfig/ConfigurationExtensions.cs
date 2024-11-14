@@ -106,16 +106,16 @@ namespace SchoolApi.Core.Business.CommonConfig
 
     private static async Task WriteResponseAsync(HttpContext context, int statusCode, string message)
     {
-        context.Response.StatusCode = statusCode; // Set the status code
-        context.Response.ContentType = "application/json"; // Set content type to JSON
+        context.Response.StatusCode = statusCode; 
+        context.Response.ContentType = "application/json"; 
 
         var responseObj = new 
         {
-            statusCode, // Include the status code
-            message      // Include the message
-        }; // Create an anonymous object with the message
+            statusCode, 
+            message      
+        }; 
 
-        // Write the JSON response asynchronously
+
         await context.Response.WriteAsJsonAsync(responseObj);
     }
 

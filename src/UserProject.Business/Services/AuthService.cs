@@ -24,35 +24,22 @@ namespace UserProject.Business.Services
             _configuration = configuration;
         }
 
-        // public async Task<string> Login(string userEmail, string password)
-        // {
-        //     var user = await _repo.ValidateUser(userEmail, password);
-        //     if (user == null)
-        //     {
-        //         throw new UnauthorizedAccessException("Invalid username or password");
-        //     }
-
-        //     var claims = await GenerateClaims(user);
-        //     var token = GenerateToken(claims);
-        //     return token;
-        // }
         public async Task<Users> ValidateUser(string email, string password)
         {
-            // Retrieve the user by email from the database
+            
             var user = await _repo.ValidateUser(email);
 
             if (user == null)
             {
-                return null; // If user doesn't exist, return null
+                return null; 
             }
 
-            // Verify the password by comparing the hash of the entered password with the stored hash
-            if (VerifyPassword(password, user.UserPassword, user.PasswordSalt))
+              if (VerifyPassword(password, user.UserPassword, user.PasswordSalt))
             {
-                return user; // If password is correct, return the user
+                return user;
             }
 
-            return null; // If password is incorrect, return null
+            return null; 
         }
 
 

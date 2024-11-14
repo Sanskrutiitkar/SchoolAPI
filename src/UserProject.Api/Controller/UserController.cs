@@ -40,8 +40,8 @@ namespace UserProject.Api.Controller
         /// <response code="409">If a user with the same email already exists</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserRegistrationDto))] 
-    public async Task<ActionResult<UserRegistrationDto>> Register(UserRegistrationDto registrationDto)
-    {
+        public async Task<ActionResult<UserRegistrationDto>> Register(UserRegistrationDto registrationDto)
+        {
         var existingUser = await _userRepo.GetUserByEmail(registrationDto.UserEmail);
         if (existingUser != null)
         {

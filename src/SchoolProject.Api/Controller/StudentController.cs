@@ -6,11 +6,10 @@ using SchoolApi.Core.Business.Filter;
 using SchoolApi.Core.Business.GlobalException;
 using SchoolProject.Api.Constants;
 using SchoolProject.Api.DTOs;
-using SchoolProject.Api.Filter;
 using SchoolProject.Buisness.Models;
 using SchoolProject.Buisness.Repository;
 using SchoolProject.Buisness.Services;
-using Swashbuckle.AspNetCore.Annotations;
+
 
 
 namespace SchoolProject.Api.Controller
@@ -115,11 +114,12 @@ namespace SchoolProject.Api.Controller
         /// <param name="studentDto">The updated student data transfer object containing the student's new details.</param>
         /// <remarks>
         /// This endpoint updates the details of an existing student. If the student is not found,
-        /// a 404 Not Found status will be returned.
+        /// a 404 Not Found status will be returned, 409 if updated details contain duplicate email.
         /// </remarks>
         /// <returns>A <see cref="StudentRequestDto"/> object representing the updated student.</returns>
         /// <response code="200">Returns the updated student DTO</response>
         /// <response code="404">If no student is found with the specified ID</response>
+        /// <response code="409">If a duplicate entry is detected</response>
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]
         [Authorize(Roles = RoleConstant.Admin)]
@@ -130,6 +130,10 @@ namespace SchoolProject.Api.Controller
             if (existingStudent == null)
             {
                 return NotFound(new { message = ExceptionMessages.StudentNotFound });
+            }
+            var isDuplicate = await _studentRepo.CheckDuplicate(existingStudent);
+            if(isDuplicate != null){
+                    throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
             }
 
          

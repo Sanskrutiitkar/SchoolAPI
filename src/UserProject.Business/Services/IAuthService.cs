@@ -9,7 +9,6 @@ namespace UserProject.Business.Services
 {
     public interface IAuthService
     {
-         //Task<string> Login(string userEmail, string password);
          string GenerateToken(Claim[] claims);
          Task<Claim[]> GenerateClaims(Users user);
          public Task<Users> ValidateUser(string email, string password);
