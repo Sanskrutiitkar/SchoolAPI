@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace UserProject.Api.Exceptions
+namespace UserProject.Api.Constants
 {
-    public class ExceptionMessages
+   public class ExceptionMessages
     {
         public const string UserNotFound= "Student with this id not found";
         public const string AlreadyInactive= "Student with this id is already inactive";

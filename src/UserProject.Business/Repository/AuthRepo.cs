@@ -15,9 +15,9 @@ namespace UserProject.Business.Repository
         {
             _context = context;
         }
-        public async Task<Users> ValidateUser(string email, string password)
+        public async Task<Users?> ValidateUser(string userEmail)
         {
-            return await _context.Users.FirstOrDefaultAsync(i => i.UserEmail == email && i.UserPassword == password) ?? new Users();
+            return await _context.Users.FirstOrDefaultAsync(i => i.UserEmail == userEmail && i.IsActive);
         }
     }
 }

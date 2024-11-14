@@ -14,7 +14,7 @@ namespace SchoolProject.Buisness.Repository
         Task<IEnumerable<Student>> GetAllStudents();
         Task<Student> UpdateStudent(Student student);
         Task<PagedResponse<Student>> GetSearchedStudents(string search, int pageNumber, int pageSize);       
-        Task<Student> CheckDuplicate(Student student);
+        Task<Student?> CheckDuplicate(Student student);
     
     }
 }

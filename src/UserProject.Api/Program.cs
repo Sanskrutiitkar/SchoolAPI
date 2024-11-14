@@ -7,8 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using UserProject.Api.Exceptions;
-using UserProject.Api.Filter;
+using SchoolApi.Core.Business.Exceptions;
 using UserProject.Api.Mapper;
 using UserProject.Api.Validators;
 using UserProject.Business.Data;
@@ -30,8 +29,6 @@ builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 
 builder.Services.AddFluentValidationAutoValidation(fv => fv.DisableDataAnnotationsValidation = true);
-builder.Services.AddScoped<ModelValidationFilter>();
-builder.Services.AddControllers(options => options.Filters.Add<ModelValidationFilter>());
 builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = true);
  
 

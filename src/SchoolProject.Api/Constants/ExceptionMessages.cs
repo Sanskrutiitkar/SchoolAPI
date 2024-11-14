@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SchoolProject.Api.Exceptions
+namespace SchoolProject.Api.Constants
 {
     public class ExceptionMessages
     {
@@ -12,7 +12,5 @@ namespace SchoolProject.Api.Exceptions
         public const string PaginationPageNumer = "Please enter a valid page number";
         public const string PaginationPageSize = "Please enter a valid page size";
         public const string DuplicateEntry = "This email is already used";
-  
     }
-    
 }

@@ -33,13 +33,12 @@ namespace SchoolProject.Buisness.Repository
 
         public async Task<IEnumerable<Student>> GetAllStudents()
         {
-            return await _context.Students.Where(s=>s.IsActive==true).ToListAsync() ?? new List<Student>();
+            return await _context.Students.Where(s=>s.IsActive==true).ToListAsync();
         }
 
         public async Task<Student?> GetStudentById(int id)
         {
-            Student? student = await _context.Students.FindAsync(id);
-            return student;
+            return await _context.Students.FirstOrDefaultAsync(s => s.StudentId == id && s.IsActive);            
         }
 
         public async Task<Student> UpdateStudent(Student student)
@@ -66,9 +65,9 @@ namespace SchoolProject.Buisness.Repository
             return new PagedResponse<Student>(items, pageNumber, pageSize, totalCount);
         }
 
-        public async Task<Student> CheckDuplicate(Student student)
+        public async Task<Student?> CheckDuplicate(Student student)
         {
-            return await _context.Students.FirstOrDefaultAsync(s => s.StudentEmail == student.StudentEmail);           
+            return await _context.Students.FirstOrDefaultAsync(s => s.StudentEmail == student.StudentEmail && s.IsActive);           
         }
     }
 }

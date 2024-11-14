@@ -31,17 +31,17 @@ namespace UserProject.Business.Repository
 
         public async Task<IEnumerable<Users>> GetAllUser()
         {
-            return await _context.Users.Where(s=>s.IsActive==true).ToListAsync() ?? new List<Users>();
+            return await _context.Users.Where(s=>s.IsActive==true).ToListAsync();
         }
 
         public async Task<Users?> GetUserById(int userId)
         {
-            Users? user = await _context.Users.FindAsync(userId);
-            return user;
+             return await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.IsActive);;
+     
         }
-        public async Task<Users> GetUserByEmail(string userEmail)
+        public async Task<Users?> GetUserByEmail(string userEmail)
         {
-            return await _context.Users.FirstOrDefaultAsync(s => s.UserEmail == userEmail) ?? new Users();            
+            return await _context.Users.FirstOrDefaultAsync(u => u.UserEmail == userEmail && u.IsActive);        
         }
     }
 }

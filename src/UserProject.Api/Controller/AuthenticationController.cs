@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
+using UserProject.Api.Constants;
 using UserProject.Api.DTOs;
-using UserProject.Api.Exceptions;
 using UserProject.Business.Services;
 
 namespace UserProject.Api.Controller
@@ -31,17 +28,36 @@ namespace UserProject.Api.Controller
         [HttpPost]  
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))] 
  
-        public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
+        // public async Task<IActionResult> Login(LoginRequestDto loginRequest)
+        // {
+        //     try
+        //     {
+        //         var token = await _authService.Login(loginRequest.UserEmail, loginRequest.Password);
+        //         return Ok(new { Token = token });
+        //     }
+        //     catch (UnauthorizedAccessException)
+        //     {
+        //         return Unauthorized(new { message = ExceptionMessages.InvalidCredentials});
+        //     }  
+        // }
+        public async Task<string> Login(string userEmail, string password)
         {
-            try
+            var user = await _authService.ValidateUser(userEmail, password);
+            if (user == null)
             {
-                var token = await _authService.Login(loginRequest.UserEmail, loginRequest.Password);
-                return Ok(new { Token = token });
+                throw new UnauthorizedAccessException("Invalid username or password");
             }
-            catch (UnauthorizedAccessException)
-            {
-                return Unauthorized(ExceptionMessages.InvalidCredentials);
-            }
+
+            // Validate the password by comparing the entered password's hash with the stored hash
+            // if (!_authService.VerifyPassword(password, user.UserPassword, user.PasswordSalt))
+            // {
+            //     throw new UnauthorizedAccessException("Invalid username or password");
+            // }
+
+            var claims = await  _authService.GenerateClaims(user);
+            var token = _authService.GenerateToken(claims);
+            return token;
         }
+
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -23,31 +24,49 @@ namespace UserProject.Business.Services
             _configuration = configuration;
         }
 
-        public async Task<string> Login(string username, string password)
+        // public async Task<string> Login(string userEmail, string password)
+        // {
+        //     var user = await _repo.ValidateUser(userEmail, password);
+        //     if (user == null)
+        //     {
+        //         throw new UnauthorizedAccessException("Invalid username or password");
+        //     }
+
+        //     var claims = await GenerateClaims(user);
+        //     var token = GenerateToken(claims);
+        //     return token;
+        // }
+        public async Task<Users> ValidateUser(string email, string password)
         {
-            var user = await _repo.ValidateUser(username, password);
-            if (user == null || user == new Users())
+            // Retrieve the user by email from the database
+            var user = await _repo.ValidateUser(email);
+
+            if (user == null)
             {
-                throw new UnauthorizedAccessException("Invalid username or password");
+                return null; // If user doesn't exist, return null
             }
 
-            var claims = await GenerateClaims(user);
-            var token = GenerateToken(claims);
-            return token;
+            // Verify the password by comparing the hash of the entered password with the stored hash
+            if (VerifyPassword(password, user.UserPassword, user.PasswordSalt))
+            {
+                return user; // If password is correct, return the user
+            }
+
+            return null; // If password is incorrect, return null
         }
 
-        private static Task<Claim[]> GenerateClaims(Users user)
+
+        public  Task<Claim[]> GenerateClaims(Users user)
         {
             return Task.FromResult(new[]
             {
                 new Claim("Name", user.UserName ?? throw new ArgumentNullException(nameof(user.UserName))),
                 new Claim("Email", user.UserEmail ?? throw new ArgumentNullException(nameof(user.UserEmail))),
                 new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "Teacher"),
-                new Claim("Status", user.IsActive ? "Active" : "Inactive")
             });
         }
 
-        private string GenerateToken(Claim[] claims)
+        public string GenerateToken(Claim[] claims)
         {
             var jwtKey = _configuration["Jwt:Key"] ?? throw new ArgumentNullException("Jwt:Key", "JWT key is not configured.");
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
@@ -57,11 +76,48 @@ namespace UserProject.Business.Services
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddDays(1),
+                expires: DateTime.UtcNow.AddMinutes(1),
                 signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         } 
+        public (string hashedPassword, string salt) HashPassword(string password)
+        {
+        // Generate a unique salt
+        using (var rng = new RNGCryptoServiceProvider())
+        {
+            byte[] saltBytes = new byte[16]; // 128-bit salt
+            rng.GetBytes(saltBytes);
+            string salt = Convert.ToBase64String(saltBytes);
+
+            // Use PBKDF2 to hash the password with the salt
+            using (var pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, 10000)) // 10000 iterations
+            {
+                byte[] hashBytes = pbkdf2.GetBytes(32); // 256-bit hash
+                string hash = Convert.ToBase64String(hashBytes);
+
+                return (hash, salt); // Return the hash and the salt as base64 strings
+            }
+        }
+        }
+        public bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt)
+        {
+            // Convert the stored salt from base64 back to bytes
+            byte[] saltBytes = Convert.FromBase64String(storedSalt);
+
+            // Use PBKDF2 to hash the entered password with the stored salt
+            using (var pbkdf2 = new Rfc2898DeriveBytes(enteredPassword, saltBytes, 10000))
+            {
+                byte[] enteredHashBytes = pbkdf2.GetBytes(32); // 256-bit hash
+                string enteredHash = Convert.ToBase64String(enteredHashBytes);
+
+                // Compare the hashes
+                return enteredHash == storedHash;
+            }
+        }
+
     }
-}
+
+    }
+

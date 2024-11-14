@@ -8,6 +8,6 @@ namespace UserProject.Business.Repository
 {
     public interface IAuthRepo
     {
-        Task<Users> ValidateUser(string email, string password);
+        Task<Users?> ValidateUser(string userEmail);
     }
 }

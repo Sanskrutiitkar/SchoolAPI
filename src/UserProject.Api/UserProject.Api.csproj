@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\UserProject.Business\UserProject.Business.csproj" />
+    <ProjectReference Include="..\SchoolApi.Core.Business\SchoolApi.Core.Business.csproj" />
   </ItemGroup>
 
 </Project>

@@ -11,10 +11,11 @@ namespace UserProject.Business.Models
     {
         [Key]
         public int UserId {get; set;}
-        public string UserEmail {get; set;}
-        public string UserName {get; set;}
-        public string UserPassword {get; set;}
-        public bool IsAdmin {get; set;}
-        public bool IsActive {get; set;} = true;
+        public  string UserEmail {get; set;}
+        public  string UserName {get; set;}
+        public  string UserPassword {get; set;}
+        public string PasswordSalt{get; set;}
+        public  bool IsAdmin {get; set;}
+        public  bool IsActive {get; set;} = true;
     }
 }

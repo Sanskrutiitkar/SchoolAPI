@@ -1,31 +1,30 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using SchoolApi.Core.Business.GlobalException;
+using UserProject.Api.Constants;
 using UserProject.Api.DTOs;
-using UserProject.Api.Exceptions;
-using UserProject.Api.GlobalException;
 using UserProject.Business.Models;
 using UserProject.Business.Repository;
+using UserProject.Business.Services;
 
 namespace UserProject.Api.Controller
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles ="Admin")]
+    [Authorize(Roles =RoleConstant.Admin)]
     public class UserController : ControllerBase
     {
          private readonly IUserRepo _userRepo;
         private readonly IMapper _mapper;
+        private readonly IAuthService _authService;
 
-        public UserController(IUserRepo userRepo, IMapper mapper)
+        public UserController(IUserRepo userRepo, IMapper mapper,IAuthService authService)
         {
             _userRepo = userRepo;
             _mapper = mapper;
+            _authService=authService;
 
         }
         /// <summary>
@@ -38,35 +37,38 @@ namespace UserProject.Api.Controller
         /// <response code="409">If a user with the same email already exists</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserRegistrationDto))] 
-        public async Task<ActionResult<UserRegistrationDto>> Register([FromBody] UserRegistrationDto registrationDto)
+    public async Task<ActionResult<UserRegistrationDto>> Register(UserRegistrationDto registrationDto)
+    {
+        var existingUser = await _userRepo.GetUserByEmail(registrationDto.UserEmail);
+        if (existingUser != null)
         {
-            var existingUser = await _userRepo.GetUserByEmail(registrationDto.UserEmail);
-            if (existingUser != null)
-            {
-                throw new DuplicateEntryException(ExceptionMessages.AlreadyExists);
-            }
-
-            var newUser = _mapper.Map<Users>(registrationDto);
-            var createdUser = await _userRepo.AddUser(newUser);
-            var mappedUser = _mapper.Map<UserRegistrationDto>(createdUser);
-            return Ok(mappedUser);
+            throw new DuplicateEntryException(ExceptionMessages.AlreadyExists);
         }
+
+        // Generate a unique salt and hash the password
+        var (hashedPassword, salt) = _authService.HashPassword(registrationDto.UserPassword);
+
+        var newUser = _mapper.Map<Users>(registrationDto);
+        newUser.UserPassword = hashedPassword;
+        newUser.PasswordSalt = salt; // Store the salt in the database along with the hash
+
+        var createdUser = await _userRepo.AddUser(newUser);
+        var mappedUser = _mapper.Map<UserRegistrationDto>(createdUser);
+        
+        return Ok(mappedUser);
+    }
+
         /// <summary>
         /// Retrieves all users.
         /// </summary>
         /// <returns>A list of UserRequestDto objects representing all users.</returns>
         /// <response code="200">Returns a list of users</response>
-        /// <response code="404">If no users are found</response>
+  
         [HttpGet]  
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserRequestDto>))] 
-       
-        public async Task<ActionResult<UserRequestDto>> Get(){
+        public async Task<ActionResult<IEnumerable<UserRequestDto>>> Get(){
             var users = await _userRepo.GetAllUser();
-            var dtoResponse = _mapper.Map<IEnumerable<UserRequestDto>>(users);
-            if(dtoResponse.Count()==0){
-                return NotFound(dtoResponse);
-            }
-                    
+            var dtoResponse = _mapper.Map<IEnumerable<UserRequestDto>>(users);                
             return Ok(dtoResponse);
         }
 
@@ -83,13 +85,8 @@ namespace UserProject.Api.Controller
         {
             var existingUser = await _userRepo.GetUserById(id);
             if (existingUser == null){
-                return NotFound(ExceptionMessages.UserNotFound);
-            }
-            if(!existingUser.IsActive)
-            {
-                return NotFound(ExceptionMessages.AlreadyInactive);
-            }
-         
+                return NotFound(new { message = ExceptionMessages.UserNotFound });
+            }     
             await _userRepo.DeleteUser(id);
             return Ok();
         }
@@ -102,12 +99,12 @@ namespace UserProject.Api.Controller
         /// <response code="404">If the user is not found</response>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserRequestDto))] 
-        public async Task<ActionResult<UserRequestDto>> GetStudentById(int id)
+        public async Task<ActionResult<UserRequestDto>> GetUserById(int id)
         {
             var user = await _userRepo.GetUserById(id);
             if (user == null)
             {
-                return NotFound(ExceptionMessages.UserNotFound);
+                  return NotFound(new { message = ExceptionMessages.UserNotFound });
             }
 
             var dtoResponse = _mapper.Map<UserRequestDto>(user);

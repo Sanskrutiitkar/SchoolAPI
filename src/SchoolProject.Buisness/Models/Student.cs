@@ -10,13 +10,13 @@ namespace SchoolProject.Buisness.Models
         
         public int StudentId { get; set; }
 
-        public string FirstName { get; set; } 
+        public string FirstName { get; set; }  = string.Empty;
 
-        public string LastName { get; set; } 
+        public string LastName { get; set; }  = string.Empty;
 
-        public string StudentEmail { get; set; } 
+        public string StudentEmail { get; set; }  = string.Empty;
 
-        public string StudentPhone { get; set; } 
+        public string StudentPhone { get; set; }  = string.Empty;
 
         public DateTime BirthDate { get; set; }
 
