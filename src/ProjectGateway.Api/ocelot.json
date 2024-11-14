@@ -1,34 +1,7 @@
 
 {
     "Routes": [
-        {
-            "DownstreamPathTemplate": "/api/Student",
-            "DownstreamScheme": "http",
-            "DownstreamHostAndPorts": [
-                {
-                    "Host": "localhost",
-                    "Port": 5299
-                }
-            ],
-            "UpstreamPathTemplate": "/students",
-            "UpstreamHttpMethod": [
-                "GET","POST"
-            ]
-        },
-        {
-            "DownstreamPathTemplate": "/api/Student/{id}",
-            "DownstreamScheme": "http",
-            "DownstreamHostAndPorts": [
-                {
-                    "Host": "localhost",
-                    "Port": 5299
-                }
-            ],
-            "UpstreamPathTemplate": "/students/{id}",
-            "UpstreamHttpMethod": [
-                "PUT","DELETE","GET"
-            ]
-        },
+ 
         {
             "DownstreamPathTemplate": "/api/Student/search",
             "DownstreamScheme": "http",
@@ -52,12 +25,45 @@
                     "Port": 5299
                 }
             ],
-            "UpstreamPathTemplate": "/sanskruti/{everything}",
+            "UpstreamPathTemplate": "/Student/{everything}",
             "UpstreamHttpMethod": [
                 "GET",
                 "POST",
                 "PUT",
                 "DELETE"
+            ]
+        },
+        {
+            "DownstreamPathTemplate": "/api/User/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5252
+                }
+            ],
+            "UpstreamPathTemplate": "/User/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
+            ]
+        },
+        {
+            "DownstreamPathTemplate": "/api/Authentication",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "localhost",
+                    "Port": 5252
+                }
+            ],
+            "UpstreamPathTemplate": "/Authenticate",
+            "UpstreamHttpMethod": [
+
+                "POST"
+
             ]
         }
     ]

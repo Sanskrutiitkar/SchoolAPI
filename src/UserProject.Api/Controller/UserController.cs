@@ -2,6 +2,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SchoolApi.Core.Business.Filter;
 using SchoolApi.Core.Business.GlobalException;
 using UserProject.Api.Constants;
 using UserProject.Api.DTOs;
@@ -14,6 +15,8 @@ namespace UserProject.Api.Controller
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles =RoleConstant.Admin)]
+    [ModelValidationFilter] 
+    
     public class UserController : ControllerBase
     {
          private readonly IUserRepo _userRepo;
