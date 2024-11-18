@@ -5,17 +5,13 @@ using SchoolProject.Buisness.Repository;
 using SchoolProject.Buisness.Services;
 using SchoolApi.Core.Business.CommonConfig;
 
-
-
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-
+builder.Services.ConfigureSwagger(builder.Configuration);
 builder.Services.ConfigureDatabase<StudentDbContext>(builder.Configuration); 
 builder.Services.ConfigureAuthentication(builder.Configuration);
-builder.Services.ConfigureSwagger(builder.Configuration);
+
 builder.Services.ConfigureCors();
 builder.Services.ConfigureLogging();
 builder.Services.ConfigureFluentValidation();
@@ -28,6 +24,7 @@ builder.Services.AddAutoMapper(typeof(StudentAutoMapperProfile).Assembly);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
+app.UseCors("AllowAllOrigins");
 app.UseExceptionHandler(_ => { });
 if (app.Environment.IsDevelopment())
 {
@@ -38,7 +35,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("AllowAllOrigins");
 app.MapControllers();
 
 app.Run();

@@ -27,18 +27,18 @@ namespace UserProject.Api.Controller
         /// <response code="401">If the credentials are invalid</response>
         [HttpPost]  
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))] 
- 
         public async Task<string> Login(LoginRequestDto loginRequest)
         {
-            var user = await _authService.ValidateUser(loginRequest.UserEmail, loginRequest.Password);
+           
+            var user = await _authService.ValidateUser(loginRequest.UserEmail, loginRequest.Password);           
             if (user == null)
             {
-                throw new UnauthorizedAccessException("Invalid username or password");
-            }
-
-            var claims = await  _authService.GenerateClaims(user);
-            var token = _authService.GenerateToken(claims);
-            return token;
+                
+                throw new UnauthorizedAccessException(ExceptionMessages.InvalidCredentials);
+            }           
+            var claims = await _authService.GenerateClaims(user);        
+            var token = _authService.GenerateToken(claims);        
+            return token;           
         }
 
     }

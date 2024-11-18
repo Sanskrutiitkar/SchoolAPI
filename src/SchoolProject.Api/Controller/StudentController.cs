@@ -92,10 +92,8 @@ namespace SchoolProject.Api.Controller
         [ProducesResponseType(typeof(StudentRequestDto), StatusCodes.Status200OK)]   
         [Authorize(Roles = RoleConstant.Admin)]
         public async Task<ActionResult<StudentRequestDto>> Post(StudentPostDto studentDto)
-        {
-            
-            var mappedStudent = _mapper.Map<Student>(studentDto);
-            
+        {          
+            var mappedStudent = _mapper.Map<Student>(studentDto);            
             mappedStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate);
             var isDuplicate = await _studentRepo.CheckDuplicate(mappedStudent);
             if(isDuplicate == null){
@@ -104,7 +102,6 @@ namespace SchoolProject.Api.Controller
                 return Ok(returnMappedStudent);
             }
             throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
-
         }
 
        /// <summary>
@@ -135,7 +132,6 @@ namespace SchoolProject.Api.Controller
             if(isDuplicate != null){
                     throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
             }
-
          
             if (!string.IsNullOrEmpty(studentDto.FirstName))
                 existingStudent.FirstName = studentDto.FirstName;
@@ -154,7 +150,6 @@ namespace SchoolProject.Api.Controller
                 existingStudent.BirthDate = studentDto.BirthDate.Value;
                 existingStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate.Value);
             }
-
             
             var returnedStudent = await _studentRepo.UpdateStudent(existingStudent);
             var mappedStudent = _mapper.Map<StudentRequestDto>(returnedStudent);

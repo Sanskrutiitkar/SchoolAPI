@@ -1,27 +1,12 @@
 
 {
     "Routes": [
- 
-        {
-            "DownstreamPathTemplate": "/api/Student/search",
-            "DownstreamScheme": "http",
-            "DownstreamHostAndPorts": [
-                {
-                    "Host": "localhost",
-                    "Port": 5299
-                }
-            ],
-            "UpstreamPathTemplate": "/students/search",
-            "UpstreamHttpMethod": [
-                "GET"
-            ]
-        },
         {
             "DownstreamPathTemplate": "/api/Student/{everything}",
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "localhost",
+                    "Host": "schoolapi",
                     "Port": 5299
                 }
             ],
@@ -31,14 +16,15 @@
                 "POST",
                 "PUT",
                 "DELETE"
-            ]
+            ],
+            "SwaggerKey": "schoolapi"
         },
         {
             "DownstreamPathTemplate": "/api/User/{everything}",
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "localhost",
+                    "Host": "userapi",
                     "Port": 5252
                 }
             ],
@@ -48,23 +34,40 @@
                 "POST",
                 "PUT",
                 "DELETE"
-            ]
+            ],
+            "SwaggerKey": "userapi"
         },
         {
             "DownstreamPathTemplate": "/api/Authentication",
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "localhost",
+                    "Host": "userapi",
                     "Port": 5252
                 }
             ],
             "UpstreamPathTemplate": "/Authenticate",
             "UpstreamHttpMethod": [
-
                 "POST"
-
-            ]
+            ],
+            "SwaggerKey": "userapi"
         }
-    ]
+    ],
+    "SwaggerEndPoints": [{
+        "Key": "schoolapi",
+        "Config": [{
+            "Name": "SchoolAPI",
+            "Version": "v1",
+            "Url": "http://schoolprojectapi:5299/swagger/v1/swagger.json"
+        }]
+    },
+    {
+        "Key": "userapi",
+        "Config": [{
+            "Name": "UserAPI",
+            "Version": "v1",
+            "Url": "http://userprojectapi:5252/swagger/v1/swagger.json"
+        }]
+    }
+]
 }

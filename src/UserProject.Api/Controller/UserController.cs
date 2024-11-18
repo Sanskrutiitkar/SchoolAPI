@@ -40,26 +40,26 @@ namespace UserProject.Api.Controller
         /// <response code="409">If a user with the same email already exists</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserRegistrationDto))] 
-        public async Task<ActionResult<UserRegistrationDto>> Register(UserRegistrationDto registrationDto)
+        public async Task<ActionResult<UserRequestDto>> Register(UserRegistrationDto registrationDto)
         {
-        var existingUser = await _userRepo.GetUserByEmail(registrationDto.UserEmail);
-        if (existingUser != null)
-        {
-            throw new DuplicateEntryException(ExceptionMessages.AlreadyExists);
+            var existingUser = await _userRepo.GetUserByEmail(registrationDto.UserEmail);
+            if (existingUser != null)
+            {
+                throw new DuplicateEntryException(ExceptionMessages.AlreadyExists);
+            }
+
+            // Generate a unique salt and hash the password
+            var (hashedPassword, salt) = _authService.HashPassword(registrationDto.UserPassword);
+
+            var newUser = _mapper.Map<Users>(registrationDto);
+            newUser.UserPassword = hashedPassword;
+            newUser.PasswordSalt = salt; // Store the salt in the database along with the hash
+
+            var createdUser = await _userRepo.AddUser(newUser);
+            var mappedUser = _mapper.Map<UserRequestDto>(createdUser);
+            
+            return Ok(mappedUser);
         }
-
-        // Generate a unique salt and hash the password
-        var (hashedPassword, salt) = _authService.HashPassword(registrationDto.UserPassword);
-
-        var newUser = _mapper.Map<Users>(registrationDto);
-        newUser.UserPassword = hashedPassword;
-        newUser.PasswordSalt = salt; // Store the salt in the database along with the hash
-
-        var createdUser = await _userRepo.AddUser(newUser);
-        var mappedUser = _mapper.Map<UserRegistrationDto>(createdUser);
-        
-        return Ok(mappedUser);
-    }
 
         /// <summary>
         /// Retrieves all users.

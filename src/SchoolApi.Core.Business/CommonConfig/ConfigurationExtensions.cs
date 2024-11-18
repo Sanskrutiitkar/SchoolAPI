@@ -160,7 +160,7 @@ namespace SchoolApi.Core.Business.CommonConfig
         }
 
 
- public static void ConfigureCors(this IServiceCollection services)
+        public static void ConfigureCors(this IServiceCollection services)
         {
             services.AddCors(options =>
             {

@@ -11,5 +11,6 @@ namespace UserProject.Api.Constants
         public const string AlreadyInactive= "Student with this id is already inactive";
         public const string AlreadyExists = "User with this email already exists";
         public const string InvalidCredentials="Invalid EmailId or Password";
+        
     }
 }
