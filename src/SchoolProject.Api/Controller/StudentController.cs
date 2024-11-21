@@ -113,7 +113,7 @@ namespace SchoolProject.Api.Controller
                 };
          
                 var message = JsonConvert.SerializeObject(studentCreatedMessage);
-                _publisher.Publish(message, "student_event_routingkey", null);
+                _publisher.Publish(message, "student.created", null);
 
                 
                 return Ok(returnMappedStudent);
@@ -179,7 +179,7 @@ namespace SchoolProject.Api.Controller
                 };
          
                 var message = JsonConvert.SerializeObject(studentUpdateMessage);
-                _publisher.Publish(message, "student_event_routingkey", null);
+                _publisher.Publish(message, "student.updated", null);
             return Ok(mappedStudent);
         }
 
@@ -212,7 +212,7 @@ namespace SchoolProject.Api.Controller
                 };
          
                 var message = JsonConvert.SerializeObject(studentDeletedMessage);
-                _publisher.Publish(message, "student_event_routingkey", null);
+                _publisher.Publish(message, "student.deleted", null);
          
             await _studentRepo.DeleteStudent(id);
             return Ok();

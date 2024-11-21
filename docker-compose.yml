@@ -19,6 +19,7 @@ services:
       - 5299:5299
     networks:
       - gateway_network 
+  
   projectapigateway:
     build:
       context: .

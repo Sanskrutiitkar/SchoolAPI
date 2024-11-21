@@ -6,7 +6,7 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "schoolapi",
+                    "Host": "localhost",
                     "Port": 5299
                 }
             ],
@@ -24,7 +24,7 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "userapi",
+                    "Host": "localhost",
                     "Port": 5252
                 }
             ],
@@ -42,7 +42,7 @@
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
                 {
-                    "Host": "userapi",
+                    "Host": "localhost",
                     "Port": 5252
                 }
             ],
@@ -58,7 +58,7 @@
         "Config": [{
             "Name": "SchoolAPI",
             "Version": "v1",
-            "Url": "http://schoolprojectapi:5299/swagger/v1/swagger.json"
+            "Url": "http://localhost:5299/swagger/v1/swagger.json"
         }]
     },
     {
@@ -66,7 +66,7 @@
         "Config": [{
             "Name": "UserAPI",
             "Version": "v1",
-            "Url": "http://userprojectapi:5252/swagger/v1/swagger.json"
+            "Url": "http://localhost:5252/swagger/v1/swagger.json"
         }]
     }
 ]

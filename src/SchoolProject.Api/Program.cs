@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSingleton<IEmailService, EmailService>();
 
-builder.Services.AddSingleton<IConnectionProvider>(new ConnectionProvider("amqp://guest:guest@host.docker.internal:5672"));
+builder.Services.AddSingleton<IConnectionProvider>(new ConnectionProvider("amqp://guest:guest@localhost:5672"));
 builder.Services.AddSingleton<IPublisher>(p => new Publisher(
     p.GetService<IConnectionProvider>(),
     "student_exchange",   // Exchange name
@@ -25,7 +25,7 @@ builder.Services.AddSingleton<ISubscriber>(s => new Subscriber(
     s.GetService<IConnectionProvider>(),
     "student_exchange",  // The exchange to subscribe to
     "student_event_queue",   // The queue name
-    "student_event_routingkey",   // The routing key to listen to
+    "student.*",   // The routing key to listen to
     ExchangeType.Topic  // Exchange type
 ));
 

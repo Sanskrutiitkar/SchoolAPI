@@ -31,7 +31,7 @@ namespace SchoolProject.Api.Listener
     }
 
     
-    private bool Subscribe(string message, IDictionary<string, object> header)
+    private  bool Subscribe(string message, IDictionary<string, object> header)
     {
         try
         {
@@ -72,7 +72,7 @@ namespace SchoolProject.Api.Listener
                     break;
             }
 
-            _emailService.SendEmail(studentEventMessage.StudentEmail, subject, body);
+             _emailService.SendEmail(studentEventMessage.StudentEmail, subject, body);
             Console.WriteLine($"Email sent to: {studentEventMessage.StudentEmail}");
 
             return true;
