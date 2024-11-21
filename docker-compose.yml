@@ -18,7 +18,7 @@ services:
     ports:
       - 5299:5299
     networks:
-      - gateway_network
+      - gateway_network 
   projectapigateway:
     build:
       context: .
@@ -30,9 +30,13 @@ services:
     depends_on:
       - schoolprojectapi
       - userprojectapi
-
+ 
 networks:
   gateway_network:
     driver: bridge
+
+ 
+
+ 
   
 

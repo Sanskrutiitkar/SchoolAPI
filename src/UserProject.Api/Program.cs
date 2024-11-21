@@ -5,6 +5,7 @@ using UserProject.Business.Data;
 using UserProject.Business.Repository;
 using UserProject.Business.Services;
 using SchoolApi.Core.Business.CommonConfig;
+using Serilog;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +18,7 @@ builder.Services.ConfigureCors();
 builder.Services.ConfigureLogging();
 builder.Services.ConfigureFluentValidation();
 builder.Services.ConfigureExceptionHandling();
-
+//builder.AddSerilogLogging();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
@@ -33,6 +34,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+// app.UseSerilogRequestLogging(options =>
+// {
+//     options.EnrichDiagnosticContext = async (diagnosticContext, httpContext) =>
+//     {
+//         diagnosticContext.Set("RequestLog", true);
+//         diagnosticContext.Set("RequestPath", httpContext.Request.Path);
+//         diagnosticContext.Set("RequestMethod", httpContext.Request.Method);
+//     };
+// });
+ 
+ 
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAllOrigins");

@@ -2,8 +2,11 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Plain.RabbitMQ;
 using SchoolApi.Core.Business.Filter;
 using SchoolApi.Core.Business.GlobalException;
+using SchoolApi.Core.Business.SharedModels;
 using SchoolProject.Api.Constants;
 using SchoolProject.Api.DTOs;
 using SchoolProject.Buisness.Models;
@@ -24,12 +27,14 @@ namespace SchoolProject.Api.Controller
         private readonly IStudentService _studentService;
         private readonly IMapper _mapper;
         private readonly IStudentRepo _studentRepo;
+        private readonly IPublisher _publisher;
 
-        public StudentController(IStudentService studentService, IMapper mapper, IStudentRepo studentRepo)
+        public StudentController(IStudentService studentService, IMapper mapper, IStudentRepo studentRepo,IPublisher publisher)
         {
             _studentService = studentService;
             _mapper = mapper;
             _studentRepo = studentRepo;
+            _publisher = publisher;
         }
         /// <summary>
         /// Retrieves a list of all students.
@@ -97,8 +102,20 @@ namespace SchoolProject.Api.Controller
             mappedStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate);
             var isDuplicate = await _studentRepo.CheckDuplicate(mappedStudent);
             if(isDuplicate == null){
-                var returnStudent = await _studentRepo.AddStudent(mappedStudent);
-                var  returnMappedStudent= _mapper.Map<StudentRequestDto>(returnStudent);
+                var returnedStudent = await _studentRepo.AddStudent(mappedStudent);
+                var  returnMappedStudent= _mapper.Map<StudentRequestDto>(returnedStudent);
+                var studentCreatedMessage = new StudentEventMessage
+                {
+                    EventType="created",
+                    StudentId = returnedStudent.StudentId,
+                    StudentName = returnedStudent.FirstName,
+                    StudentEmail = returnedStudent.StudentEmail
+                };
+         
+                var message = JsonConvert.SerializeObject(studentCreatedMessage);
+                _publisher.Publish(message, "student_event_routingkey", null);
+
+                
                 return Ok(returnMappedStudent);
             }
             throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
@@ -153,7 +170,16 @@ namespace SchoolProject.Api.Controller
             
             var returnedStudent = await _studentRepo.UpdateStudent(existingStudent);
             var mappedStudent = _mapper.Map<StudentRequestDto>(returnedStudent);
-
+            var studentUpdateMessage = new StudentEventMessage
+                {
+                    EventType="updated",
+                    StudentId = returnedStudent.StudentId,
+                    StudentName = returnedStudent.FirstName,
+                    StudentEmail = returnedStudent.StudentEmail
+                };
+         
+                var message = JsonConvert.SerializeObject(studentUpdateMessage);
+                _publisher.Publish(message, "student_event_routingkey", null);
             return Ok(mappedStudent);
         }
 
@@ -177,6 +203,16 @@ namespace SchoolProject.Api.Controller
             {
                   return NotFound(new { message = ExceptionMessages.StudentNotFound });
             }
+            var studentDeletedMessage = new StudentEventMessage
+                {
+                    EventType="deleted",
+                    StudentId = existingStudent.StudentId,
+                    StudentName = existingStudent.FirstName,
+                    StudentEmail = existingStudent.StudentEmail
+                };
+         
+                var message = JsonConvert.SerializeObject(studentDeletedMessage);
+                _publisher.Publish(message, "student_event_routingkey", null);
          
             await _studentRepo.DeleteStudent(id);
             return Ok();

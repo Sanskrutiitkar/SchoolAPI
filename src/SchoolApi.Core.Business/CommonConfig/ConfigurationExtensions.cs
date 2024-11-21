@@ -14,6 +14,8 @@ using Serilog;
 using Microsoft.AspNetCore.Mvc;
 using SchoolApi.Core.Business.Constants;
 using System.Reflection;
+using Microsoft.AspNetCore.Builder;
+using Serilog.Filters;
 
 
 namespace SchoolApi.Core.Business.CommonConfig
@@ -193,6 +195,23 @@ namespace SchoolApi.Core.Business.CommonConfig
         public static void ConfigureExceptionHandling(this IServiceCollection services)
         {
             services.AddExceptionHandler<CustomExceptionHandler>();
+        }
+        public static void AddSerilogLogging(this WebApplicationBuilder builder)
+        {
+            builder.Host.UseSerilog((context, services, configuration) =>
+            {
+                configuration
+                    .Enrich.FromLogContext()
+                    .WriteTo.Logger(lg => lg
+                        .Filter.ByIncludingOnly(Matching.WithProperty("RequestLog"))
+                        .WriteTo.File("Logs/api_requests.log", rollingInterval: RollingInterval.Day)
+                    )
+                    .WriteTo.Logger(lg => lg
+                        .Filter.ByIncludingOnly(evt => evt.Exception != null && !evt.Exception.Data.Contains("HandledByCustomHandler"))
+                        .WriteTo.File("Logs/exceptions.log", rollingInterval: RollingInterval.Day)
+                    )
+                    .WriteTo.Console();
+            });
         }
     }
 }

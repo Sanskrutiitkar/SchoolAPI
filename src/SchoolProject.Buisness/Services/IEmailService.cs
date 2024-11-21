@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace SchoolProject.Buisness.Services
 {
-    public interface IStudentService
+    public interface IEmailService
     {
-        public int CalculateAge(DateTime birthDate);
-        
-  
+        Task SendEmail(string toEmail, string subject, string body);
     }
 }
