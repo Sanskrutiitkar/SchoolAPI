@@ -3,7 +3,7 @@
 version: '3.4'
 
 services:
-  userprojectapi:
+  userapi:
     build:
       context: .
       dockerfile: src/UserProject.Api/Dockerfile
@@ -11,7 +11,7 @@ services:
       - 5252:5252
     networks:
       - gateway_network
-  schoolprojectapi:
+  schoolapi:
     build:
       context: .
       dockerfile: src/SchoolProject.Api/Dockerfile
@@ -29,8 +29,8 @@ services:
     networks:
       - gateway_network
     depends_on:
-      - schoolprojectapi
-      - userprojectapi
+      - schoolapi
+      - userapi
  
 networks:
   gateway_network:

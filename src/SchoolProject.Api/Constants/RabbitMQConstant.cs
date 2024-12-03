@@ -7,7 +7,7 @@ namespace SchoolProject.Api.Constants
 {
     public class RabbitMQConstant
     {
-        public const string ConnectionString="amqp://guest:guest@localhost:5672";
+        public const string ConnectionString="amqp://guest:guest@host.docker.internal:5672";
         public const string EventTypeCreated = "created";
         public const string EventTypeUpdated = "updated";
         public const string EventTypeDeleted = "deleted";
