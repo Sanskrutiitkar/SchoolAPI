@@ -9,5 +9,7 @@ namespace SchoolProject.Api.Constants
         public const string PaginationPageNumer = "Please enter a valid page number";
         public const string PaginationPageSize = "Please enter a valid page size";
         public const string DuplicateEntry = "This email is already used";
+        public const string CourseNotFound = "Course not found";
+        public const string CoursePaymentInitialized="Course assignment initiated, waiting for payment confirmation";
     }
 }

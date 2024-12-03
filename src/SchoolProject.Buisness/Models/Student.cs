@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace SchoolProject.Buisness.Models
 {
@@ -20,11 +17,10 @@ namespace SchoolProject.Buisness.Models
 
         public DateTime BirthDate { get; set; }
 
-        public int StudentAge { get; set; }
-
         public Gender StudentGender { get; set; }
 
         public bool IsActive { get; set; } = true;
+        public List<Course> Courses { get; set; } = new List<Course>();
     }
     public enum Gender
     {

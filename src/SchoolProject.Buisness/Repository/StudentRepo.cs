@@ -52,8 +52,8 @@ namespace SchoolProject.Buisness.Repository
             {
                 query = query.Where(p => p.FirstName.Contains(search) ||
                                          p.LastName.Contains(search) ||
-                                         p.StudentEmail.Contains(search) ||
-                                         p.StudentAge.ToString() == search);
+                                         p.StudentEmail.Contains(search) 
+                                         );
             }
 
             var totalCount = await query.CountAsync();
@@ -62,9 +62,10 @@ namespace SchoolProject.Buisness.Repository
             return new PagedResponse<Student>(items, pageNumber, pageSize, totalCount);
         }
 
-        public async Task<Student?> CheckDuplicate(Student student)
+        public bool CheckDuplicate(string StudentEmail)
         {
-            return await _context.Students.FirstOrDefaultAsync(s => s.StudentEmail == student.StudentEmail && s.IsActive);           
+            return  _context.Students.Any(s => s.StudentEmail == StudentEmail);  
+
         }
     }
 }

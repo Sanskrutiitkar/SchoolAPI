@@ -28,13 +28,15 @@ namespace SchoolProject.Api.Controller
         private readonly IMapper _mapper;
         private readonly IStudentRepo _studentRepo;
         private readonly IPublisher _publisher;
+        private readonly ICourseRepo _courseRepo;
 
-        public StudentController(IStudentService studentService, IMapper mapper, IStudentRepo studentRepo,IPublisher publisher)
+        public StudentController(IStudentService studentService, IMapper mapper, IStudentRepo studentRepo,IPublisher publisher,ICourseRepo courseRepo)
         {
             _studentService = studentService;
             _mapper = mapper;
             _studentRepo = studentRepo;
             _publisher = publisher;
+            _courseRepo = courseRepo;
         }
         /// <summary>
         /// Retrieves a list of all students.
@@ -52,7 +54,11 @@ namespace SchoolProject.Api.Controller
         public async Task<ActionResult<IEnumerable<StudentRequestDto>>> Get()
         {
             var students = await _studentRepo.GetAllStudents();
-            var dtoResponse = _mapper.Map<IEnumerable<StudentRequestDto>>(students);                 
+            var dtoResponse = _mapper.Map<IEnumerable<StudentRequestDto>>(students);  
+            foreach(StudentRequestDto student in dtoResponse)
+            {
+                student.StudentAge = _studentService.CalculateAge(student.BirthDate);
+            }               
             return Ok(dtoResponse);
         }
 
@@ -79,6 +85,7 @@ namespace SchoolProject.Api.Controller
             }
 
             var dtoResponse = _mapper.Map<StudentRequestDto>(student);
+            dtoResponse.StudentAge = _studentService.CalculateAge(student.BirthDate);
             return Ok(dtoResponse);
         }
 
@@ -99,21 +106,21 @@ namespace SchoolProject.Api.Controller
         public async Task<ActionResult<StudentRequestDto>> Post(StudentPostDto studentDto)
         {          
             var mappedStudent = _mapper.Map<Student>(studentDto);            
-            mappedStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate);
-            var isDuplicate = await _studentRepo.CheckDuplicate(mappedStudent);
-            if(isDuplicate == null){
+            var isDuplicate =  _studentRepo.CheckDuplicate(mappedStudent.StudentEmail);
+            if(isDuplicate == false){
                 var returnedStudent = await _studentRepo.AddStudent(mappedStudent);
                 var  returnMappedStudent= _mapper.Map<StudentRequestDto>(returnedStudent);
+                returnMappedStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate);
                 var studentCreatedMessage = new StudentEventMessage
                 {
-                    EventType="created",
+                    EventType=RabbitMQConstant.EventTypeCreated,
                     StudentId = returnedStudent.StudentId,
                     StudentName = returnedStudent.FirstName,
                     StudentEmail = returnedStudent.StudentEmail
                 };
          
                 var message = JsonConvert.SerializeObject(studentCreatedMessage);
-                _publisher.Publish(message, "student.created", null);
+                _publisher.Publish(message, RabbitMQConstant.KeyStudentCreated, null);
 
                 
                 return Ok(returnMappedStudent);
@@ -121,7 +128,7 @@ namespace SchoolProject.Api.Controller
             throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
         }
 
-       /// <summary>
+        /// <summary>
         /// Updates an existing student by their ID.
         /// </summary>
         /// <param name="id">The ID of the student to update.</param>
@@ -145,9 +152,8 @@ namespace SchoolProject.Api.Controller
             {
                 return NotFound(new { message = ExceptionMessages.StudentNotFound });
             }
-            var isDuplicate = await _studentRepo.CheckDuplicate(existingStudent);
-            if(isDuplicate != null){
-                    throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
+            if(_studentRepo.CheckDuplicate(studentDto.StudentEmail)){
+                throw new DuplicateEntryException(ExceptionMessages.DuplicateEntry);
             }
          
             if (!string.IsNullOrEmpty(studentDto.FirstName))
@@ -165,21 +171,21 @@ namespace SchoolProject.Api.Controller
             if (studentDto.BirthDate.HasValue)
             {
                 existingStudent.BirthDate = studentDto.BirthDate.Value;
-                existingStudent.StudentAge = _studentService.CalculateAge(studentDto.BirthDate.Value);
             }
             
             var returnedStudent = await _studentRepo.UpdateStudent(existingStudent);
             var mappedStudent = _mapper.Map<StudentRequestDto>(returnedStudent);
+            mappedStudent.StudentAge = _studentService.CalculateAge(returnedStudent.BirthDate);
             var studentUpdateMessage = new StudentEventMessage
                 {
-                    EventType="updated",
+                    EventType=RabbitMQConstant.EventTypeUpdated,
                     StudentId = returnedStudent.StudentId,
                     StudentName = returnedStudent.FirstName,
                     StudentEmail = returnedStudent.StudentEmail
                 };
          
                 var message = JsonConvert.SerializeObject(studentUpdateMessage);
-                _publisher.Publish(message, "student.updated", null);
+                _publisher.Publish(message, RabbitMQConstant.KeyStudentUpdated, null);
             return Ok(mappedStudent);
         }
 
@@ -203,18 +209,19 @@ namespace SchoolProject.Api.Controller
             {
                   return NotFound(new { message = ExceptionMessages.StudentNotFound });
             }
+            await _studentRepo.DeleteStudent(id);
             var studentDeletedMessage = new StudentEventMessage
                 {
-                    EventType="deleted",
+                    EventType=RabbitMQConstant.EventTypeDeleted,
                     StudentId = existingStudent.StudentId,
                     StudentName = existingStudent.FirstName,
                     StudentEmail = existingStudent.StudentEmail
                 };
          
                 var message = JsonConvert.SerializeObject(studentDeletedMessage);
-                _publisher.Publish(message, "student.deleted", null);
+                _publisher.Publish(message, RabbitMQConstant.KeyStudentDeleted, null);
          
-            await _studentRepo.DeleteStudent(id);
+            
             return Ok();
         }
 
@@ -251,7 +258,45 @@ namespace SchoolProject.Api.Controller
 
             return Ok(new PagedResponse<StudentRequestDto>(dtoResponse, pagedResponse.PageNumber, pagedResponse.PageSize, pagedResponse.TotalRecords));
         }
-    }
 
+        [HttpPost("assign-course")]
+        [Authorize(Roles = RoleConstant.Admin)]
+        public async Task<ActionResult> AssignCourseToStudent(int studentId, int courseId)
+        {
+            var student = await _studentRepo.GetStudentById(studentId);
+            var course = await _courseRepo.GetCourseById(courseId);
+
+            if (student == null)
+            {
+                return NotFound(new { message = ExceptionMessages.StudentNotFound });
+            }
+
+            if (course == null)
+            {
+                return NotFound(new { message = ExceptionMessages.CourseNotFound });
+            }
+
+            var studentCourseAssignedMessage = new StudentCourseMessage
+            {
+                EventType = RabbitMQConstant.EventTypeCourseAssigned,
+                StudentId = student.StudentId,
+                StudentName = $"{student.FirstName} {student.LastName}",
+                StudentEmail = student.StudentEmail,
+                CourseIds = student.Courses.Select(c => c.CourseId).ToList()
+            };
+
+            var studentCourseAssignedMessageJson = JsonConvert.SerializeObject(studentCourseAssignedMessage);
+            _publisher.Publish(studentCourseAssignedMessageJson, RabbitMQConstant.KeyCourseAssigned, null);
+            return Ok(new { message = ExceptionMessages.CoursePaymentInitialized });
+        }
+
+        [HttpPost("create-course")]
+        [Authorize(Roles = RoleConstant.Admin)]
+        public async Task<IActionResult> CreateCourse(Course course)
+        {
+            var createdCourse = await _courseRepo.AddCourse(course);
+            return Ok(createdCourse);
+        }
+    }
  
 }

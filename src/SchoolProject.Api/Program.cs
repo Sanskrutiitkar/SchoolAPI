@@ -8,28 +8,58 @@ using Serilog;
 using Plain.RabbitMQ;
 using RabbitMQ.Client;
 using SchoolProject.Api.Listener;
+using SchoolProject.Api.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-builder.Services.AddSingleton<IEmailService, EmailService>();
 
-builder.Services.AddSingleton<IConnectionProvider>(new ConnectionProvider("amqp://guest:guest@localhost:5672"));
+
+builder.Services.AddSingleton<IConnectionProvider>(new ConnectionProvider(RabbitMQConstant.ConnectionString));
 builder.Services.AddSingleton<IPublisher>(p => new Publisher(
     p.GetService<IConnectionProvider>(),
-    "student_exchange",   // Exchange name
+    RabbitMQConstant.StudentExchange,   // Exchange name
     ExchangeType.Topic  // Exchange Type
 ));
 
 // Register the Subscriber 
 builder.Services.AddSingleton<ISubscriber>(s => new Subscriber(
     s.GetService<IConnectionProvider>(),
-    "student_exchange",  // The exchange to subscribe to
-    "student_event_queue",   // The queue name
-    "student.*",   // The routing key to listen to
+    RabbitMQConstant.StudentExchange,  // The exchange to subscribe to
+    RabbitMQConstant.StudentEventQueue,   // The queue name
+    RabbitMQConstant.StudentKey,   // The routing key to listen to
     ExchangeType.Topic  // Exchange type
 ));
+builder.Services.AddSingleton<IPublisher>(p => new Publisher(
+    p.GetService<IConnectionProvider>(),
+    RabbitMQConstant.PaymentExchange, 
+    ExchangeType.Topic   
+));
 
+builder.Services.AddSingleton<ISubscriber>(s => new Subscriber(
+    s.GetService<IConnectionProvider>(),
+    RabbitMQConstant.PaymentExchange,  
+    RabbitMQConstant.PaymentEventQueue,  
+    RabbitMQConstant.PaymentKey,          
+    ExchangeType.Topic     
+));
+
+builder.Services.AddSingleton<IPublisher>(p => new Publisher(
+    p.GetService<IConnectionProvider>(),
+    RabbitMQConstant.CourseExchange,  
+    ExchangeType.Topic    
+));
+
+builder.Services.AddSingleton<ISubscriber>(s => new Subscriber(
+    s.GetService<IConnectionProvider>(),
+    RabbitMQConstant.CourseExchange,     
+    RabbitMQConstant.CourseEventQueue, 
+    RabbitMQConstant.KeyCourseAssigned,    
+    ExchangeType.Topic    
+));
+builder.Services.AddHostedService<CourseEventListener>();
+builder.Services.AddHostedService<PaymentEventListener>();
 builder.Services.AddHostedService<StudentEventEmailListener>();
+
 builder.Services.ConfigureSwagger(builder.Configuration);
 builder.Services.ConfigureDatabase<StudentDbContext>(builder.Configuration); 
 builder.Services.ConfigureAuthentication(builder.Configuration);
@@ -39,9 +69,10 @@ builder.Services.ConfigureLogging();
 builder.Services.ConfigureFluentValidation();
 builder.Services.ConfigureExceptionHandling();
 //builder.AddSerilogLogging();
-
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IStudentRepo, StudentRepo>();
 builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ICourseRepo,CourseRepo>();
 builder.Services.AddAutoMapper(typeof(StudentAutoMapperProfile).Assembly);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
