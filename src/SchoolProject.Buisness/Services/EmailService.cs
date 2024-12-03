@@ -9,11 +9,11 @@ namespace SchoolProject.Buisness.Services
     {
         public async Task SendEmail(string toEmail, string subject, string body)
         {
-            var fromEmail = "itkarsanskruti53@gmail.com"; 
+            var fromEmail = "fromEmail"; 
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
-                Credentials = new NetworkCredential("itkarsanskruti53@gmail.com", "ifba emng qlbn fvrr"),
+                Credentials = new NetworkCredential("fromEmail", "password"),
                 EnableSsl = true
             };
 
